@@ -56,14 +56,13 @@
   .app {
     max-width: 700px;
     margin: 0 auto;
-    padding: 16px;
+    padding: 0;
   }
   section {
     background: var(--panel);
-    border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 16px 20px;
-    margin-bottom: 12px;
+    padding: 16px;
+    margin-bottom: 8px;
   }
 
   /* Шапка */
@@ -346,6 +345,31 @@
   .reset:hover { background: var(--tile-hover); }
   .note { color: var(--muted); font-size: 13px; margin-top: 8px; }
   .keys { color: var(--muted); font-size: 12px; text-align: center; margin-top: 4px; }
+
+  /* На телефоне кнопка всегда под большим пальцем, а подсказки по клавишам
+     прячем: физической клавиатуры там нет. */
+  @media (max-width: 640px) {
+    .keys { display: none; }
+    .actions {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 10;
+      margin: 0;
+      border-radius: 0;
+      padding: 10px 16px;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+      box-shadow: 0 -1px 12px rgba(0, 0, 0, .14);
+    }
+    .actions .primary {
+      width: 100%;
+      min-width: 0;
+    }
+    body {
+      padding-bottom: 76px;   /* чтобы подвал не уезжал под кнопку */
+    }
+  }
 </style>
 </head>
 <body>
