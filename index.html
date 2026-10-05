@@ -1,0 +1,3025 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Тренажёр итальянских фраз</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --panel: #ffffff;
+    --text: #1d1d1f;
+    --muted: #7a7a7f;
+    --border: #d9d9dc;
+    --tile: #ffffff;
+    --tile-hover: #f0f0f2;
+    --tile-active: #e3e3e7;
+    --accent: #2f6fdf;
+    --accent-text: #ffffff;
+    --right-bg: #e3f5e6;
+    --right-border: #3b9c52;
+    --wrong-bg: #fbe3e3;
+    --wrong-border: #d64545;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17171a;
+      --panel: #202024;
+      --text: #ececef;
+      --muted: #8e8e95;
+      --border: #3a3a40;
+      --tile: #2a2a30;
+      --tile-hover: #33333a;
+      --tile-active: #3d3d45;
+      --accent: #5b8def;
+      --accent-text: #ffffff;
+      --right-bg: #1d3524;
+      --right-border: #4fb368;
+      --wrong-bg: #3d2020;
+      --wrong-border: #e06060;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  /* display у .verbs и прочих перебивает атрибут hidden — возвращаем его силу */
+  [hidden] { display: none !important; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  button { font: inherit; color: inherit; }
+
+  .app {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+  section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+
+  /* Шапка */
+  .blocks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .blocks button {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    color: var(--muted);
+  }
+  .blocks button:hover { background: var(--tile-hover); }
+  .blocks button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+  }
+  .modes {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .modes button {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    cursor: pointer;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .modes button:hover { background: var(--tile-hover); }
+  .modes button.active {
+    background: var(--text);
+    border-color: var(--text);
+    color: var(--bg);
+  }
+  .verbs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    color: var(--muted);
+    font-size: 14px;
+    max-width: 100%;
+  }
+  .verbs select {
+    font: inherit;
+    font-size: 16px;
+    color: var(--text);
+    background: var(--tile);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 10px;
+    flex: 1 1 auto;
+    min-width: 0;             /* иначе select не даёт себя сжать на телефоне */
+    max-width: 100%;
+  }
+  .forms {
+    margin: 0 0 14px;
+    border-collapse: collapse;
+    font-size: 15px;
+    width: 100%;
+  }
+  .forms td {
+    padding: 7px 12px 7px 0;
+    vertical-align: top;
+    border-top: 1px solid var(--border);
+  }
+  .forms tr:first-child td { border-top: none; }
+  .forms td.person { color: var(--muted); white-space: nowrap; }
+  .forms td.form { font-weight: 500; white-space: nowrap; color: var(--muted); }
+  .forms td.form b { color: var(--accent); }
+  .forms .ru { display: block; color: var(--muted); font-size: 14px; }
+  .forms-caption {
+    margin: 2px 0 6px;
+    font-weight: 600;
+  }
+  .forms-note {
+    margin: -6px 0 14px !important;
+    font-size: 14px;
+  }
+  .head-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px;
+  }
+  .title-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .block-title { font-weight: 600; }
+  .info {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .info:hover { background: var(--tile-hover); color: var(--text); }
+  .info.open { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+  .info-panel {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .info-panel p { margin: 0 0 10px; color: var(--muted); }
+  .info-panel dl { margin: 0; }
+  .info-panel dt { font-weight: 600; margin-top: 10px; }
+  .info-panel dd { margin: 2px 0 0; color: var(--muted); }
+  .phrase-type { color: var(--muted); font-size: 14px; }
+  .dir-toggle {
+    background: var(--tile);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+  .dir-toggle:hover { background: var(--tile-hover); }
+  .dir-toggle:active { background: var(--tile-active); }
+
+  /* Задание */
+  .task-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 64px;
+  }
+  .task-row { position: relative; }
+  .prompt { font-size: 24px; font-weight: 500; }
+  .prompt .w {
+    cursor: help;
+    border-bottom: 1px dotted var(--muted);
+  }
+  .prompt .w:hover { border-bottom-color: var(--accent); }
+  .prompt .w.open { color: var(--accent); border-bottom-color: var(--accent); }
+  .tip {
+    position: absolute;
+    z-index: 5;
+    max-width: 260px;
+    padding: 6px 10px;
+    font-size: 14px;
+    line-height: 1.3;
+    background: var(--tile);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .18);
+  }
+  .tools { flex: none; display: flex; gap: 8px; }
+  .speak {
+    flex: none;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+    cursor: pointer;
+  }
+  .speak:hover { background: var(--tile-hover); }
+  .speak:active { background: var(--tile-active); }
+  .hint { color: var(--muted); font-size: 13px; margin-top: 8px; }
+  .new-words {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-left: 3px solid var(--accent);
+    background: var(--tile-hover);
+    border-radius: 0 8px 8px 0;
+    font-size: 15px;
+  }
+  .new-words b { font-weight: 600; }
+  .new-words .gloss { color: var(--muted); }
+
+  /* Ответ и банк */
+  .answer {
+    min-height: 116px;           /* две строки плиток */
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 8px;
+    transition: background-color .15s, border-color .15s;
+  }
+  .answer.right { background: var(--right-bg); border-color: var(--right-border); border-style: solid; }
+  .answer.wrong { background: var(--wrong-bg); border-color: var(--wrong-border); }
+  .solution {
+    min-height: 28px;
+    margin: 10px 2px 4px;
+    font-size: 18px;
+    color: var(--right-border);
+    font-weight: 500;
+  }
+  .alt-solutions {
+    margin: 0 2px 8px;
+    font-size: 15px;
+    color: var(--muted);
+  }
+  .typed {
+    margin: 0 2px 8px;
+    font-size: 16px;
+    color: var(--muted);
+  }
+  .typed b {
+    color: var(--text);
+    font-weight: 600;
+    border-bottom: 2px solid var(--accent);
+  }
+  .tile.ghost {
+    visibility: hidden;          /* держит место, пока слово в строке ответа */
+    box-shadow: none;
+  }
+  .tile.match { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .tile.match u { text-decoration: none; color: var(--accent); font-weight: 600; }
+  .bank {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 52px;
+    margin-top: 6px;
+  }
+  .tile {
+    font-size: 18px;
+    padding: 12px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--tile);
+    cursor: pointer;
+    box-shadow: 0 1px 0 var(--border);
+  }
+  .tile:hover { background: var(--tile-hover); }
+  .tile:active { background: var(--tile-active); box-shadow: none; }
+  .tile:disabled { cursor: default; }
+  .tile:disabled:hover { background: var(--tile); }
+
+  /* Кнопка действия */
+  .actions { text-align: center; }
+  .primary {
+    background: var(--accent);
+    color: var(--accent-text);
+    border: none;
+    border-radius: 10px;
+    padding: 14px 40px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    min-width: 200px;
+  }
+  .primary:hover { filter: brightness(1.08); }
+  .primary:active { filter: brightness(.92); }
+
+  /* Подвал */
+  .footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .reset {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    color: var(--muted);
+  }
+  .reset:hover { background: var(--tile-hover); }
+  .note { color: var(--muted); font-size: 13px; margin-top: 8px; }
+  .keys { color: var(--muted); font-size: 12px; text-align: center; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <section>
+    <div class="modes" id="modes"></div>
+    <div class="blocks" id="blocks"></div>
+    <label class="verbs" id="verbs" hidden>
+      Глагол
+      <select id="verbSelect"></select>
+    </label>
+    <div class="head-row">
+      <div>
+        <div class="title-row">
+          <div class="block-title" id="blockTitle"></div>
+          <button class="info" id="info" type="button" title="Про эту тему">инфо</button>
+        </div>
+        <div class="phrase-type" id="phraseType"></div>
+      </div>
+      <button class="dir-toggle" id="dirToggle" type="button"></button>
+    </div>
+    <div class="info-panel" id="infoPanel" hidden></div>
+  </section>
+
+  <section>
+    <div class="task-row" id="taskRow">
+      <div class="prompt" id="prompt"></div>
+      <div class="tools">
+        <button class="speak" id="speak" type="button" title="Озвучить (пробел)">🔊</button>
+        <button class="speak" id="copy" type="button" title="Скопировать итальянскую фразу">⧉</button>
+      </div>
+      <div class="tip" id="tip" hidden></div>
+    </div>
+    <div class="new-words" id="newWords" hidden></div>
+    <div class="hint" id="voiceHint" hidden>
+      Итальянский голос не установлен. Chrome обычно подтягивает свой. На Mac: System Settings → Accessibility → Spoken Content → System Voice → Manage Voices → Italian.
+    </div>
+  </section>
+
+  <section>
+    <div class="answer" id="answer"></div>
+    <div class="solution" id="solution"></div>
+    <div class="alt-solutions" id="altSolutions" hidden></div>
+    <div class="typed" id="typed" hidden></div>
+    <div class="bank" id="bank"></div>
+  </section>
+
+  <section class="actions">
+    <button class="primary" id="action" type="button">Проверить</button>
+    <div class="keys">Нажми слово в задании — покажу перевод · Набирай слово с клавиатуры — оно подставится само · Пробел — подставить набранное, иначе озвучить · Enter — проверить / дальше · Backspace — стереть букву или убрать слово</div>
+  </section>
+
+  <section>
+    <div class="footer-row">
+      <div id="stats"></div>
+      <button class="reset" id="reset" type="button">Сбросить</button>
+    </div>
+    <div class="note" id="storageNote" hidden>Прогресс не сохраняется — открой файл в Chrome или Firefox</div>
+  </section>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// Данные
+// ═══════════════════════════════════════════════════════════════════════
+
+// itAlt / ruAlt — необязательные: другие допустимые переводы.
+// Могут использовать только слова основного варианта (плитки берутся из него),
+// но не обязаны использовать все: «Я ничего не получил» → «Ничего не получил».
+const PHRASES = [
+
+  // ── Блок 1. Essere и avere ────────────────────────────────────────────
+  { id: 1,  block: 1, type: "aff",   it: "Sono russo.",              ru: "Я русский." },
+  { id: 2,  block: 1, type: "neg",   it: "Non sono italiano.",       ru: "Я не итальянец.", ruAlt: ["Не итальянец."] },
+  { id: 3,  block: 1, type: "quest", it: "Lei è italiano?",          ru: "Вы итальянец?" },
+  { id: 4,  block: 1, type: "aff",   it: "Sono di Krasnodar.",       ru: "Я из Краснодара.", ruAlt: ["Из Краснодара."] },
+  { id: 5,  block: 1, type: "aff",   it: "Ho trent'anni.",           ru: "Мне тридцать лет.", ruAlt: ["Тридцать лет."] },
+  { id: 6,  block: 1, type: "neg",   it: "Non ho tempo.",            ru: "У меня нет времени." },
+  { id: 7,  block: 1, type: "quest", it: "Ha una camera?",           ru: "У вас есть номер?", ruAlt: ["Есть номер?"] },
+  { id: 8,  block: 1, type: "neg",   it: "Non ho la carta.",         ru: "У меня нет карты." },
+  { id: 9,  block: 1, type: "quest", it: "Ha fame?",                 ru: "Вы голодны?" },
+  { id: 10, block: 1, type: "neg",   it: "Non è caro.",              ru: "Это не дорого." },
+  { id: 11, block: 1, type: "aff",   it: "Sono stanco oggi.",        ru: "Я устал сегодня.", itAlt: ["Oggi sono stanco."], ruAlt: ["Устал сегодня."] },
+  { id: 12, block: 1, type: "quest", it: "È libero questo posto?",   ru: "Это место свободно?" },
+
+  // ── Блок 2. Модальные глаголы ─────────────────────────────────────────
+  { id: 13, block: 2, type: "aff",   it: "Vorrei un caffè.",              ru: "Я хотел бы кофе.", ruAlt: ["Хотел бы кофе."] },
+  { id: 14, block: 2, type: "aff",   it: "Vorrei prenotare un tavolo.",   ru: "Я хотел бы забронировать столик.", ruAlt: ["Хотел бы забронировать столик."] },
+  { id: 15, block: 2, type: "quest", it: "Posso pagare con la carta?",    ru: "Могу я заплатить картой?", ruAlt: ["Могу заплатить картой?"] },
+  { id: 16, block: 2, type: "neg",   it: "Non posso venire.",             ru: "Я не могу прийти.", ruAlt: ["Не могу прийти."] },
+  { id: 17, block: 2, type: "aff",   it: "Devo andare.",                  ru: "Мне нужно идти.", ruAlt: ["Нужно идти."] },
+  { id: 18, block: 2, type: "aff",   it: "Devo prendere il treno.",       ru: "Мне нужно сесть на поезд.", ruAlt: ["Нужно сесть на поезд."] },
+  { id: 19, block: 2, type: "neg",   it: "Non devo lavorare oggi.",       ru: "Мне не нужно работать сегодня.", itAlt: ["Oggi non devo lavorare."], ruAlt: ["Не нужно работать сегодня."] },
+  { id: 20, block: 2, type: "quest", it: "Può ripetere, per favore?",     ru: "Вы можете повторить, пожалуйста?", itAlt: ["Per favore, può ripetere?"], ruAlt: ["Можете повторить, пожалуйста?"] },
+  { id: 21, block: 2, type: "quest", it: "Può aiutarmi?",                 ru: "Вы можете мне помочь?", ruAlt: ["Вы можете помочь?", "Можете мне помочь?", "Можете помочь?"] },
+  { id: 22, block: 2, type: "quest", it: "Vuole un caffè?",               ru: "Вы хотите кофе?", ruAlt: ["Хотите кофе?"] },
+  { id: 23, block: 2, type: "aff",   it: "Vorrei vedere la camera.",      ru: "Я хотел бы посмотреть номер.", ruAlt: ["Хотел бы посмотреть номер."] },
+  { id: 24, block: 2, type: "neg",   it: "Non voglio mangiare adesso.",   ru: "Я не хочу есть сейчас.", itAlt: ["Adesso non voglio mangiare."], ruAlt: ["Не хочу есть сейчас."] },
+
+  // ── Блок 3. Готовые блоки ─────────────────────────────────────────────
+  { id: 25, block: 3, type: "quest", it: "Dov'è il bagno?",               ru: "Где туалет?" },
+  { id: 26, block: 3, type: "quest", it: "Dov'è la stazione?",            ru: "Где вокзал?" },
+  { id: 27, block: 3, type: "quest", it: "Quanto costa?",                 ru: "Сколько стоит?" },
+  { id: 28, block: 3, type: "quest", it: "Quanto costano?",               ru: "Сколько они стоят?" },
+  { id: 29, block: 3, type: "quest", it: "C'è un ristorante qui?",        ru: "Здесь есть ресторан?" },
+  { id: 30, block: 3, type: "neg",   it: "Non c'è problema.",             ru: "Нет проблем." },
+  { id: 31, block: 3, type: "aff",   it: "Ci sono due camere.",           ru: "Есть два номера." },
+  { id: 32, block: 3, type: "aff",   it: "Ho bisogno di aiuto.",          ru: "Мне нужна помощь.", ruAlt: ["Нужна помощь."] },
+  { id: 33, block: 3, type: "quest", it: "Come si dice in italiano?",     ru: "Как это сказать по-итальянски?" },
+  { id: 34, block: 3, type: "neg",   it: "Non capisco.",                  ru: "Я не понимаю.", ruAlt: ["Не понимаю."] },
+  { id: 35, block: 3, type: "aff",   it: "Va bene, grazie.",              ru: "Хорошо, спасибо." },
+  { id: 36, block: 3, type: "quest", it: "Mi scusi, dov'è l'hotel?",      ru: "Извините, где отель?" },
+
+  // ── Блок 4. Повседневные глаголы ──────────────────────────────────────
+  { id: 37, block: 4, type: "aff",   it: "Parlo un po' di italiano.",     ru: "Я немного говорю по-итальянски.", ruAlt: ["Немного говорю по-итальянски."] },
+  { id: 38, block: 4, type: "neg",   it: "Non parlo italiano.",           ru: "Я не говорю по-итальянски.", ruAlt: ["Не говорю по-итальянски."] },
+  { id: 39, block: 4, type: "quest", it: "Parla inglese?",                ru: "Вы говорите по-английски?", ruAlt: ["Говорите по-английски?"] },
+  { id: 40, block: 4, type: "aff",   it: "Capisco un po'.",               ru: "Я немного понимаю.", ruAlt: ["Немного понимаю."] },
+  { id: 41, block: 4, type: "aff",   it: "Vado a Roma domani.",           ru: "Я еду в Рим завтра.", itAlt: ["Domani vado a Roma."], ruAlt: ["Еду в Рим завтра."] },
+  { id: 42, block: 4, type: "neg",   it: "Non so dov'è.",                 ru: "Я не знаю, где это.", ruAlt: ["Не знаю, где это."] },
+  { id: 43, block: 4, type: "quest", it: "Sa dov'è la farmacia?",         ru: "Вы знаете, где аптека?", ruAlt: ["Знаете, где аптека?"] },
+  { id: 44, block: 4, type: "aff",   it: "Prendo un caffè.",              ru: "Я возьму кофе.", ruAlt: ["Возьму кофе."] },
+  { id: 45, block: 4, type: "aff",   it: "Mi piace l'Italia.",            ru: "Мне нравится Италия." },
+  { id: 46, block: 4, type: "neg",   it: "Non mi piace il freddo.",       ru: "Мне не нравится холод." },
+  { id: 47, block: 4, type: "quest", it: "Lavora qui?",                   ru: "Вы работаете здесь?", ruAlt: ["Работаете здесь?"] },
+  { id: 48, block: 4, type: "aff",   it: "Vivo in Russia.",               ru: "Я живу в России.", ruAlt: ["Живу в России."] },
+
+  // ── Блок 5. Третье лицо и женский род ─────────────────────────────────
+  { id: 49, block: 5, type: "aff",   it: "Lei è italiana.",               ru: "Она итальянка." },
+  { id: 50, block: 5, type: "neg",   it: "Lei non è stanca.",             ru: "Она не устала." },
+  { id: 51, block: 5, type: "quest", it: "Lei è contenta?",               ru: "Она довольна?" },
+  { id: 52, block: 5, type: "aff",   it: "Lei ha trent'anni.",            ru: "Ей тридцать лет." },
+  { id: 53, block: 5, type: "neg",   it: "Lei non ha tempo.",             ru: "У неё нет времени." },
+  { id: 54, block: 5, type: "aff",   it: "Lei vive a Roma.",              ru: "Она живёт в Риме." },
+  { id: 55, block: 5, type: "neg",   it: "Lei non parla russo.",          ru: "Она не говорит по-русски." },
+  { id: 56, block: 5, type: "aff",   it: "Lei vuole un caffè.",           ru: "Она хочет кофе." },
+  { id: 57, block: 5, type: "quest", it: "Lei capisce l'inglese?",        ru: "Она понимает английский?" },
+  { id: 58, block: 5, type: "quest", it: "Lei ha fame?",                  ru: "Она голодна?" },
+  { id: 59, block: 5, type: "aff",   it: "Lei deve lavorare.",            ru: "Ей нужно работать." },
+  { id: 60, block: 5, type: "neg",   it: "Lei non può venire.",           ru: "Она не может прийти." },
+
+  // ── Блок 6. Прошедшее для аварий ──────────────────────────────────────
+  { id: 61, block: 6, type: "aff",   it: "Ho perso il passaporto.",       ru: "Я потерял паспорт.", ruAlt: ["Потерял паспорт."] },
+  { id: 62, block: 6, type: "aff",   it: "Ho prenotato online.",          ru: "Я забронировал онлайн.", ruAlt: ["Забронировал онлайн."] },
+  { id: 63, block: 6, type: "aff",   it: "Ho già pagato.",                ru: "Я уже заплатил.", ruAlt: ["Уже заплатил."] },
+  { id: 64, block: 6, type: "neg",   it: "Non ho capito.",                ru: "Я не понял.", ruAlt: ["Не понял."] },
+  { id: 65, block: 6, type: "quest", it: "Ha visto il mio telefono?",     ru: "Вы видели мой телефон?", ruAlt: ["Видели мой телефон?"] },
+  { id: 66, block: 6, type: "aff",   it: "Ho sbagliato, mi scusi.",       ru: "Я ошибся, извините.", itAlt: ["Mi scusi, ho sbagliato."], ruAlt: ["Ошибся, извините."] },
+  { id: 67, block: 6, type: "neg",   it: "Non ho ricevuto niente.",       ru: "Я ничего не получил.", ruAlt: ["Ничего не получил."] },
+  { id: 68, block: 6, type: "aff",   it: "Sono arrivato ieri.",           ru: "Я приехал вчера.", itAlt: ["Ieri sono arrivato."], ruAlt: ["Приехал вчера."] },
+  { id: 69, block: 6, type: "aff",   it: "Lei è arrivata ieri.",          ru: "Она приехала вчера.", itAlt: ["Ieri lei è arrivata."] },
+  { id: 70, block: 6, type: "aff",   it: "Ho chiamato l'hotel.",          ru: "Я позвонил в отель.", ruAlt: ["Позвонил в отель."] }
+
+];
+
+const CONFUSABLES = {
+  "sono":     ["sei", "è", "siamo"],
+  "è":        ["sono", "sei", "e"],
+  "ho":       ["hai", "ha", "ò"],
+  "ha":       ["ho", "hai", "à"],
+  "vorrei":   ["voglio", "vuole", "vuoi"],
+  "vuole":    ["vorrei", "voglio", "vuoi"],
+  "posso":    ["può", "puoi", "possa"],
+  "può":      ["posso", "puoi"],
+  "devo":     ["deve", "devi", "dovere"],
+  "deve":     ["devo", "devi"],
+  "vado":     ["va", "vai", "andare"],
+  "so":       ["sa", "sai", "sono"],
+  "sa":       ["so", "sai"],
+  "capisco":  ["capisce", "capisci", "capire"],
+  "capisce":  ["capisco", "capisci"],
+  "parlo":    ["parla", "parli", "parlare"],
+  "parla":    ["parlo", "parli"],
+  "prendo":   ["prende", "prendi", "prendere"],
+  "non":      ["no", "ne"],
+  "c'è":      ["ci sono", "è", "ce"],
+  "mi":       ["ti", "si", "me"],
+  "il":       ["lo", "la", "un"],
+  "la":       ["il", "le", "una"],
+  "un":       ["uno", "una", "il"],
+  "una":      ["un", "uno", "la"],
+  "di":       ["da", "a", "de"],
+  "a":        ["in", "di", "da"],
+  "in":       ["a", "di", "nel"],
+  "italiana": ["italiano", "italiani"],
+  "stanca":   ["stanco", "stanchi"],
+  "contenta": ["contento", "contenti"],
+  "arrivata": ["arrivato", "arrivati"],
+  // Прилагательные: рядом кладём другую форму рода и слово с противоположным
+  // смыслом. Выбор между rosso и rossa — это и есть урок согласования.
+  "rosso":    ["rossa", "verde"],
+  "rossa":    ["rosso", "verde"],
+  "caldo":    ["calda", "freddo"],
+  "freddo":   ["fredda", "caldo"],
+  "piccolo":  ["piccola", "grande"],
+  "piccola":  ["piccolo", "grande"],
+  "grande":   ["piccolo", "piccola"],
+  "nuovo":    ["nuova", "vecchio"],
+  "nuova":    ["nuovo", "vecchia"],
+  "buono":    ["buona", "cattivo"],
+  "buona":    ["buono", "cattiva"],
+  "blu":      ["verde", "rosso"]
+};
+
+const CONFUSABLES_RU = {
+  "я":        ["ты", "он", "она"],
+  "вы":       ["ты", "она", "они"],
+  "она":      ["он", "вы", "они"],
+  "не":       ["нет", "ни"],
+  "мне":      ["мной", "меня", "тебе"],
+  "нужно":    ["хочу", "могу", "должен"],
+  "могу":     ["нужно", "хочу", "может"],
+  "хотел":    ["хочу", "хотела", "могу"],
+  "есть":     ["нет", "был", "будет"],
+  "где":      ["куда", "когда", "как"],
+  "сколько":  ["как", "что", "где"],
+  "здесь":    ["там", "туда", "тут"],
+  "тебе":     ["мне", "вам", "ей"],
+  "вам":      ["мне", "тебе", "ей"],
+  "ей":       ["ему", "её", "вам", "мне"]
+};
+
+// ── Словарь для подсказок ───────────────────────────────────────────────
+// Клик по слову в задании показывает его перевод. Значения даны по смыслу
+// в этих фразах, а не полным словарным набором.
+
+const GLOSS = {
+  it: {
+    "avere": "иметь: posso avere — можно мне", "prego": "прошу, пожалуйста — в ответ на grazie",
+    "calda": "горячая, тёплая", "cattiva": "плохая", "cattivo": "плохой",
+    "fredda": "холодная", "vecchia": "старая", "vecchio": "старый", "verde": "зелёный",
+    "blu": "синий — форма не меняется", "buona": "хорошая — про вкус",
+    "buono": "хороший — про вкус и качество", "caldo": "горячий, тёплый",
+    "computer": "компьютер", "giornale": "газета", "grande": "большой — форма не меняется",
+    "macchina": "машина", "nuova": "новая", "nuovo": "новый", "piccola": "маленькая",
+    "piccolo": "маленький", "rossa": "красная", "rosso": "красный", "vino": "вино",
+    "aiutare": "помочь", "al": "в, на — a + il", "bar": "бар", "bus": "автобус",
+    "capisci": "ты понимаешь", "casa": "дом: a casa — домой, дома", "centro": "центр",
+    "cerca": "ищет — Вы ищете", "cerchi": "ты ищешь", "cerco": "я ищу",
+    "check-in": "регистрация на рейс или в отеле", "chiesa": "церковь", "colazione": "завтрак",
+    "contento": "довольный", "domanda": "вопрос", "entrare": "войти", "errore": "ошибка",
+    "fa": "делает — Вы делаете", "faccio": "я делаю", "fai": "ты делаешь", "foto": "фотография",
+    "fumare": "курить", "hai": "у тебя есть", "hotel": "отель", "l'acqua": "вода",
+    "l'indirizzo": "адрес", "l'italiano": "итальянский язык", "le": "ей, Вам — перед глаголом",
+    "lui": "он: con lui — с ним", "male": "плохо", "mare": "море: al mare — на море",
+    "me": "меня, мной: con me — со мной", "meglio": "лучше", "menu": "меню", "museo": "музей",
+    "nome": "имя", "parli": "ты говоришь", "prende": "берёт — Вы берёте", "prendi": "ты берёшь",
+    "prezzo": "цена", "pronto": "готовый", "puoi": "ты можешь", "risposta": "ответ",
+    "ritardo": "опоздание: in ritardo — с опозданием", "sai": "ты знаешь", "sei": "ты есть",
+    "serve": "нужен, нужна, нужно", "sicuro": "уверенный", "soldi": "деньги",
+    "spagnolo": "испанский", "spesa": "покупки: fare la spesa — ходить за продуктами",
+    "sta": "находится — Вы находитесь", "stai": "ты находишься", "sto": "я нахожусь",
+    "tedesco": "немецкий", "ti": "тебе, тебя", "tutto": "всё", "vai": "ты едешь",
+    "vede": "видит — Вы видите", "vedi": "ты видишь", "vedo": "я вижу", "vengo": "я приду",
+    "viene": "придёт — Вы придёте", "vieni": "ты придёшь", "vuoi": "ты хочешь",
+    "a": "в, к", "adesso": "сейчас", "alla": "в, на — a + la",
+    "aspettare": "ждать, подождать", "biglietto": "билет", "cassa": "касса",
+    "chiamare": "звать, вызвать, позвонить", "comprare": "купить, покупать",
+    "conto": "счёт — в кафе, отеле", "cornetto": "корнетто — круассан",
+    "cosa": "что", "firmare": "подписать", "destra": "правая сторона: a destra — направо",
+    "dove": "где, куда", "fare": "делать, сделать", "gelato": "джелато, мороженое",
+    "girare": "повернуть", "latte": "молоко", "panino": "сэндвич, булка",
+    "partire": "уезжать, отправляться", "pasta": "паста", "pizza": "пицца", "portare": "нести, взять с собой",
+    "provare": "попробовать", "scendere": "выходить — из транспорта, спускаться",
+    "taxi": "такси", "tornare": "вернуться", "trovare": "найти", "aiutarmi": "помочь мне", "aiuto": "помощь",
+    "andare": "идти, ехать", "arrivata": "приехала", "arrivato": "приехал",
+    "bagno": "туалет", "bene": "хорошо", "bisogno": "нужда: ho bisogno — мне нужно",
+    "c'è": "есть, имеется", "caffè": "кофе", "camera": "номер, комната",
+    "camere": "номера, комнаты", "capisce": "понимает", "capisco": "понимаю",
+    "capito": "понял", "caro": "дорогой", "carta": "карта, банковская карта",
+    "chiamato": "позвонил", "ci": "тут: ci sono — есть, имеются", "come": "как",
+    "con": "с", "contenta": "довольна", "costa": "стоит", "costano": "стоят",
+    "deve": "ему, ей, Вам нужно", "devi": "тебе нужно", "devo": "мне нужно",
+    "di": "из, о — предлог", "dice": "говорит: si dice — говорится",
+    "domani": "завтра", "dov'è": "где находится", "due": "два",
+    "fame": "голод: ho fame — я голоден", "farmacia": "аптека",
+    "favore": "услуга: per favore — пожалуйста", "freddo": "холодный; холод", "già": "уже",
+    "grazie": "спасибо", "ha": "имеет — у вас есть", "ho": "я имею — у меня есть",
+    "ieri": "вчера", "il": "артикль мужского рода", "in": "в",
+    "inglese": "английский", "italiana": "итальянка",
+    "italiano": "итальянец, итальянский", "krasnodar": "Краснодар",
+    "l'hotel": "отель", "l'inglese": "английский язык", "l'italia": "Италия",
+    "la": "артикль женского рода", "lavora": "работает", "lavorare": "работать",
+    "lei": "она; Вы — вежливое", "libero": "свободный", "mangiare": "есть, кушать",
+    "mi": "мне, меня", "mio": "мой", "niente": "ничего", "non": "не",
+    "oggi": "сегодня", "online": "онлайн", "pagare": "платить", "pagato": "заплатил",
+    "parla": "говорит", "parlo": "я говорю", "passaporto": "паспорт",
+    "per": "для, за", "perso": "потерял", "piace": "нравится", "po'": "немного",
+    "posso": "я могу", "posto": "место", "prendere": "брать; сесть на транспорт",
+    "prendo": "я беру", "prenotare": "забронировать", "prenotato": "забронировал",
+    "problema": "проблема", "può": "может — Вы можете", "quanto": "сколько",
+    "questo": "этот", "qui": "здесь", "ricevuto": "получил", "ripetere": "повторить",
+    "ristorante": "ресторан", "roma": "Рим", "russia": "Россия", "russo": "русский",
+    "sa": "знает — Вы знаете", "sbagliato": "ошибся", "scusi": "извините",
+    "si": "безличное «-ся»: come si dice — как говорится", "so": "я знаю",
+    "sono": "я есть; они есть", "stanca": "усталая", "stanco": "усталый",
+    "stazione": "вокзал, станция", "tavolo": "столик", "telefono": "телефон",
+    "tempo": "время", "treno": "поезд", "trent'anni": "тридцать лет",
+    "un": "один — неопределённый артикль", "un po'": "немного",
+    "una": "одна — неопределённый артикль", "va": "идёт: va bene — хорошо",
+    "vado": "я еду, я иду", "vedere": "видеть, посмотреть", "venire": "прийти",
+    "visto": "видел", "vive": "живёт", "vivo": "я живу", "voglio": "я хочу",
+    "vorrei": "я хотел бы", "vuole": "хочет — Вы хотите", "è": "есть — он, она есть"
+  },
+  ru: {
+    "можно": "posso avere", "машина": "la macchina", "прошу": "prego",
+    "большой": "grande", "большую": "grande", "вино": "il vino", "газету": "il giornale",
+    "горячий": "caldo", "компьютер": "il computer", "красное": "rosso", "красную": "rossa",
+    "маленькую": "piccola", "маленький": "piccolo", "машину": "la macchina", "новую": "nuova",
+    "новый": "nuovo", "синий": "blu", "синюю": "blu", "хорошее": "buono", "хорошую": "buona",
+    "холодный": "freddo",
+    "автобус": "il bus", "адрес": "l'indirizzo", "аптеку": "la farmacia",
+    "бар": "al bar — в бар", "беру": "prendo", "берёте": "prende", "берёшь": "prendi",
+    "видите": "vede", "видишь": "vedi", "вижу": "vedo", "вода": "l'acqua", "воду": "l'acqua",
+    "войти": "entrare", "вопрос": "una domanda", "время": "tempo", "всё": "tutto",
+    "говоришь": "parli", "готов": "pronto", "делаете": "fa", "делаешь": "fai",
+    "делаю": "faccio", "денег": "soldi", "деньги": "soldi", "доволен": "contento",
+    "дома": "a casa", "домой": "a casa", "едете": "va", "едешь": "vai", "завтрак": "colazione",
+    "знаешь": "sai", "имя": "il nome", "итальянский": "l'italiano", "ищете": "cerca",
+    "ищешь": "cerchi", "ищу": "cerco", "карта": "la carta", "комната": "una camera",
+    "курить": "fumare", "лучше": "meglio", "меню": "il menu", "мной": "me: con me — со мной",
+    "можешь": "puoi", "море": "il mare", "музей": "il museo", "ним": "lui: con lui — с ним",
+    "нужен": "serve", "он": "lui", "опоздал": "in ritardo", "ответ": "la risposta",
+    "отеле": "in hotel", "ошибку": "un errore", "плохо": "male", "по-испански": "spagnolo",
+    "по-немецки": "tedesco", "покупки": "la spesa", "понимаете": "capisce",
+    "понимаешь": "capisci", "порядке": "bene: sto bene — я в порядке", "приду": "vengo",
+    "придёте": "viene", "придёшь": "vieni", "проблема": "un problema",
+    "проблему": "il problema", "проблемы": "un problema", "регистрацию": "il check-in",
+    "с": "con", "свободен": "libero", "со": "con", "сюда": "qui",
+    "тебя": "te: у тебя есть — hai", "ты": "tu", "уверен": "sicuro", "фото": "una foto",
+    "хочешь": "vuoi", "центр": "in centro — в центр", "цену": "il prezzo",
+    "церковь": "la chiesa",
+    "английский": "inglese", "билет": "biglietto", "брать": "prendere",
+    "бронировать": "prenotare", "взять": "prendere", "вызвать": "chiamare",
+    "выйти": "scendere", "выходить": "scendere", "джелато": "gelato",
+    "ждать": "aspettare", "кассе": "cassa", "корнетто": "cornetto",
+    "купить": "comprare", "куда": "dove", "молоко": "latte", "найти": "trovare", "направо": "a destra",
+    "пасту": "pasta", "пиццу": "pizza", "платить": "pagare", "по": "предлог: по счёту — il conto",
+    "вернуться": "tornare", "возвращаться": "tornare", "оплатить": "pagare", "садиться": "prendere", "счёт": "conto", "повернуть": "girare", "подписать": "firmare", "уезжать": "partire", "делать": "fare", "подождать": "aspettare", "покупать": "comprare",
+    "попробовать": "provare", "пробовать": "provare", "сделать": "fare", "счёту": "conto",
+    "сэндвич": "panino", "такси": "taxi", "тебе": "ti", "что": "cosa", "вам": "Le", "аптека": "farmacia", "бы": "частица: vorrei — я хотел бы",
+    "в": "a, in", "вас": "Lei", "видели": "ha visto", "возьму": "prendo",
+    "вокзал": "stazione", "времени": "tempo", "вчера": "ieri", "вы": "Lei",
+    "где": "dov'è", "говорит": "parla", "говорите": "parla", "говорю": "parlo",
+    "голодна": "ha fame", "голодны": "ha fame", "два": "due", "довольна": "contenta",
+    "дорого": "caro", "еду": "vado", "ей": "le — ей нужно: deve", "есть": "c'è, ci sono",
+    "живу": "vivo", "живёт": "vive", "забронировал": "ho prenotato",
+    "забронировать": "prenotare", "завтра": "domani", "заплатил": "ho pagato",
+    "заплатить": "pagare", "здесь": "qui", "знаете": "sa", "знаю": "so",
+    "идти": "andare", "из": "di", "извините": "mi scusi", "италия": "l'Italia",
+    "итальянец": "italiano", "итальянка": "italiana", "как": "come",
+    "картой": "con la carta", "карты": "carta", "кофе": "caffè",
+    "краснодара": "Krasnodar", "лет": "anni", "меня": "у меня есть — ho",
+    "место": "posto", "мне": "mi", "могу": "posso", "может": "può", "можете": "può",
+    "мой": "mio", "на": "a, su", "не": "non", "немного": "un po'", "нет": "non c'è",
+    "неё": "у неё есть — ha", "ничего": "niente", "номер": "camera",
+    "номера": "camere", "нравится": "piace", "нужна": "ho bisogno",
+    "нужно": "devo, deve", "она": "lei", "они": "loro", "онлайн": "online",
+    "отель": "l'hotel", "ошибся": "ho sbagliato", "паспорт": "passaporto",
+    "по-английски": "inglese", "по-итальянски": "in italiano", "по-русски": "russo",
+    "повторить": "ripetere", "поезд": "treno", "пожалуйста": "per favore",
+    "позвонил": "ho chiamato", "получил": "ho ricevuto", "помочь": "aiutare",
+    "помощь": "aiuto", "понимает": "capisce", "понимаю": "capisco",
+    "понял": "ho capito", "посмотреть": "vedere", "потерял": "ho perso",
+    "приехал": "sono arrivato", "приехала": "è arrivata", "прийти": "venire",
+    "проблем": "problema", "работаете": "lavora", "работать": "lavorare",
+    "ресторан": "ristorante", "рим": "Roma", "риме": "a Roma", "россии": "in Russia",
+    "русский": "russo", "свободно": "libero", "сегодня": "oggi", "сейчас": "adesso",
+    "сесть": "prendere", "сказать": "dire", "сколько": "quanto", "спасибо": "grazie",
+    "стоит": "costa", "столик": "tavolo", "стоят": "costano", "телефон": "telefono",
+    "тридцать": "trenta", "туалет": "bagno", "у": "у меня есть — ho", "уже": "già",
+    "устал": "stanco", "устала": "stanca", "холод": "freddo", "хорошо": "va bene",
+    "хотел": "vorrei", "хотите": "vuole", "хочет": "vuole", "хочу": "voglio",
+    "это": "questo", "я": "io — обычно опускается"
+  }
+};
+
+// ── Режим тренировки по глаголам ────────────────────────────────────────
+// Отдельный набор фраз, сгруппированный по глаголу. Тренируются три лица
+// (я / ты / он, она, Вы), три типа фразы и общий набор существительных.
+
+const VERBS = [
+  { group: "База",                 items: ["essere", "avere", "fare", "stare"] },
+  { group: "Модальные и «нужно»",  items: ["volere", "potere", "dovere", "servire"] },
+  { group: "Движение",             items: ["andare", "venire"] },
+  { group: "Голова",               items: ["sapere", "capire"] },
+  { group: "Действия",             items: ["parlare", "vedere", "cercare", "prendere"] }
+];
+
+const VERB_NAMES = {
+  essere: "быть", avere: "иметь", fare: "делать", stare: "поживать, находиться",
+  volere: "хотеть", potere: "мочь", dovere: "быть должным", servire: "быть нужным",
+  andare: "идти, ехать", venire: "приходить",
+  sapere: "знать", capire: "понимать",
+  parlare: "говорить", vedere: "видеть", cercare: "искать", prendere: "брать"
+};
+
+// Формы, которые тренируем. Из них же берутся отвлекающие: в банк всегда
+// попадают две неверные формы того же глагола.
+//
+//   stem  — общая основа. Если задана, окончание выделяется жирным.
+//           У неправильных глаголов её нет, тогда формы рисуются как есть.
+//   rows  — лицо, форма, пример и его перевод. Инфинитив во всех строках
+//           один и тот же: меняться должна ровно одна вещь.
+//   types — утверждение, отрицание, вопрос на одном лице.
+
+const VERB_FORMS = {
+  dovere: {
+    stem: "dev",
+    rows: [
+      ["я",           "devo", "Devo andare.", "Мне нужно идти."],
+      ["ты",          "devi", "Devi andare.", "Тебе нужно идти."],
+      ["он, она, Вы", "deve", "Deve andare.", "Вам нужно идти. Или ему, ей."]
+    ],
+    types: [
+      ["утверждение", "Devo pagare.",     "Мне нужно платить."],
+      ["отрицание",   "Non devo pagare.", "Мне не нужно платить."],
+      ["вопрос",      "Devo pagare?",     "Мне нужно платить?"]
+    ]
+  },
+
+  essere: {
+    rows: [
+      ["я", "sono", "Sono stanco.", "Я устал."],
+      ["ты", "sei", "Sei stanco.", "Ты устал."],
+      ["он, она, Вы", "è", "È stanco.", "Он устал."]
+    ],
+    types: [
+      ["утверждение", "Sei pronto.", "Ты готов."],
+      ["отрицание", "Non sei pronto.", "Ты не готов."],
+      ["вопрос", "Sei pronto?", "Ты готов?"]
+    ]
+  },
+  avere: {
+    rows: [
+      ["я", "ho", "Ho tempo.", "У меня есть время."],
+      ["ты", "hai", "Hai tempo.", "У тебя есть время."],
+      ["он, она, Вы", "ha", "Ha tempo.", "У вас есть время."]
+    ],
+    types: [
+      ["утверждение", "Hai soldi.", "У тебя есть деньги."],
+      ["отрицание", "Non hai soldi.", "У тебя нет денег."],
+      ["вопрос", "Hai soldi?", "У тебя есть деньги?"]
+    ]
+  },
+  fare: {
+    rows: [
+      ["я", "faccio", "Faccio una foto.", "Я делаю фото."],
+      ["ты", "fai", "Fai una foto.", "Ты делаешь фото."],
+      ["он, она, Вы", "fa", "Fa una foto.", "Вы делаете фото."]
+    ],
+    types: [
+      ["утверждение", "Fai una domanda.", "Ты делаешь вопрос."],
+      ["отрицание", "Non fai una domanda.", "Ты не делаешь вопрос."],
+      ["вопрос", "Fai una domanda?", "Ты делаешь вопрос?"]
+    ]
+  },
+  stare: {
+    stem: "st",
+    rows: [
+      ["я", "sto", "Sto bene.", "Я в порядке."],
+      ["ты", "stai", "Stai bene.", "Ты в порядке."],
+      ["он, она, Вы", "sta", "Sta bene.", "Вы в порядке."]
+    ],
+    types: [
+      ["утверждение", "Stai qui.", "Ты здесь."],
+      ["отрицание", "Non stai qui.", "Ты не здесь."],
+      ["вопрос", "Stai qui?", "Ты здесь?"]
+    ]
+  },
+  volere: {
+    note: "vorrei — вежливая форма того же глагола. В кафе, отеле и магазине говорят именно её.",
+    rows: [
+      ["я — вежливо", "vorrei", "Vorrei un caffè.", "Я хотел бы кофе."],
+      ["я", "voglio", "Voglio un caffè.", "Я хочу кофе."],
+      ["ты", "vuoi", "Vuoi un caffè?", "Ты хочешь кофе?"],
+      ["он, она, Вы", "vuole", "Vuole un caffè?", "Вы хотите кофе?"]
+    ],
+    types: [
+      ["просьба", "Vorrei un caffè.", "Я хотел бы кофе."],
+      ["отрицание", "Non voglio un caffè.", "Я не хочу кофе."],
+      ["вопрос", "Vuole un caffè?", "Вы хотите кофе?"]
+    ]
+  },
+  potere: {
+    rows: [
+      ["я", "posso", "Posso entrare.", "Я могу войти."],
+      ["ты", "puoi", "Puoi entrare.", "Ты можешь войти."],
+      ["он, она, Вы", "può", "Può entrare.", "Вы можете войти."]
+    ],
+    types: [
+      ["утверждение", "Posso pagare.", "Я могу заплатить."],
+      ["отрицание", "Non posso pagare.", "Я не могу заплатить."],
+      ["вопрос", "Posso pagare?", "Я могу заплатить?"]
+    ]
+  },
+  servire: {
+    note: "Сам глагол serve не меняется — меняется местоимение перед ним.",
+    rows: [
+      ["мне", "mi serve", "Mi serve un taxi.", "Мне нужно такси."],
+      ["тебе", "ti serve", "Ti serve un taxi.", "Тебе нужно такси."],
+      ["ему, ей, Вам", "Le serve", "Le serve un taxi.", "Вам нужно такси."]
+    ],
+    types: [
+      ["утверждение", "Mi serve una camera.", "Мне нужна комната."],
+      ["отрицание", "Non mi serve una camera.", "Мне не нужна комната."],
+      ["вопрос", "Mi serve una camera?", "Мне нужна комната?"]
+    ]
+  },
+  andare: {
+    rows: [
+      ["я", "vado", "Vado a Roma.", "Я еду в Рим."],
+      ["ты", "vai", "Vai a Roma.", "Ты едешь в Рим."],
+      ["он, она, Вы", "va", "Va a Roma.", "Вы едете в Рим."]
+    ],
+    types: [
+      ["утверждение", "Vai a casa.", "Ты едешь домой."],
+      ["отрицание", "Non vai a casa.", "Ты не едешь домой."],
+      ["вопрос", "Vai a casa?", "Ты едешь домой?"]
+    ]
+  },
+  venire: {
+    rows: [
+      ["я", "vengo", "Vengo qui.", "Я приду сюда."],
+      ["ты", "vieni", "Vieni qui.", "Ты придёшь сюда."],
+      ["он, она, Вы", "viene", "Viene qui.", "Вы придёте сюда."]
+    ],
+    types: [
+      ["утверждение", "Vieni con me.", "Ты придёшь со мной."],
+      ["отрицание", "Non vieni con me.", "Ты не придёшь со мной."],
+      ["вопрос", "Vieni con me?", "Ты придёшь со мной?"]
+    ]
+  },
+  sapere: {
+    rows: [
+      ["я", "so", "So tutto.", "Я знаю всё."],
+      ["ты", "sai", "Sai tutto.", "Ты знаешь всё."],
+      ["он, она, Вы", "sa", "Sa tutto.", "Вы знаете всё."]
+    ],
+    types: [
+      ["утверждение", "Sai il prezzo.", "Ты знаешь цену."],
+      ["отрицание", "Non sai il prezzo.", "Ты не знаешь цену."],
+      ["вопрос", "Sai il prezzo?", "Ты знаешь цену?"]
+    ]
+  },
+  capire: {
+    stem: "capisc",
+    rows: [
+      ["я", "capisco", "Capisco tutto.", "Я понимаю всё."],
+      ["ты", "capisci", "Capisci tutto.", "Ты понимаешь всё."],
+      ["он, она, Вы", "capisce", "Capisce tutto.", "Вы понимаете всё."]
+    ],
+    types: [
+      ["утверждение", "Capisci l'italiano.", "Ты понимаешь итальянский."],
+      ["отрицание", "Non capisci l'italiano.", "Ты не понимаешь итальянский."],
+      ["вопрос", "Capisci l'italiano?", "Ты понимаешь итальянский?"]
+    ]
+  },
+  parlare: {
+    stem: "parl",
+    rows: [
+      ["я", "parlo", "Parlo italiano.", "Я говорю по-итальянски."],
+      ["ты", "parli", "Parli italiano.", "Ты говоришь по-итальянски."],
+      ["он, она, Вы", "parla", "Parla italiano.", "Вы говорите по-итальянски."]
+    ],
+    types: [
+      ["утверждение", "Parli inglese.", "Ты говоришь по-английски."],
+      ["отрицание", "Non parli inglese.", "Ты не говоришь по-английски."],
+      ["вопрос", "Parli inglese?", "Ты говоришь по-английски?"]
+    ]
+  },
+  vedere: {
+    stem: "ved",
+    rows: [
+      ["я", "vedo", "Vedo il treno.", "Я вижу поезд."],
+      ["ты", "vedi", "Vedi il treno.", "Ты видишь поезд."],
+      ["он, она, Вы", "vede", "Vede il treno.", "Вы видите поезд."]
+    ],
+    types: [
+      ["утверждение", "Vedi la stazione.", "Ты видишь вокзал."],
+      ["отрицание", "Non vedi la stazione.", "Ты не видишь вокзал."],
+      ["вопрос", "Vedi la stazione?", "Ты видишь вокзал?"]
+    ]
+  },
+  cercare: {
+    stem: "cerc",
+    rows: [
+      ["я", "cerco", "Cerco l'hotel.", "Я ищу отель."],
+      ["ты", "cerchi", "Cerchi l'hotel.", "Ты ищешь отель."],
+      ["он, она, Вы", "cerca", "Cerca l'hotel.", "Вы ищете отель."]
+    ],
+    types: [
+      ["утверждение", "Cerchi la stazione.", "Ты ищешь вокзал."],
+      ["отрицание", "Non cerchi la stazione.", "Ты не ищешь вокзал."],
+      ["вопрос", "Cerchi la stazione?", "Ты ищешь вокзал?"]
+    ]
+  },
+  prendere: {
+    stem: "prend",
+    rows: [
+      ["я", "prendo", "Prendo un caffè.", "Я беру кофе."],
+      ["ты", "prendi", "Prendi un caffè.", "Ты берёшь кофе."],
+      ["он, она, Вы", "prende", "Prende un caffè.", "Вы берёте кофе."]
+    ],
+    types: [
+      ["утверждение", "Prendi il treno.", "Ты берёшь поезд."],
+      ["отрицание", "Non prendi il treno.", "Ты не берёшь поезд."],
+      ["вопрос", "Prendi il treno?", "Ты берёшь поезд?"]
+    ]
+  }
+};
+
+const VERB_INFO = {
+  dovere: {
+    intro: "dovere — быть должным. После него всегда идёт инфинитив: не «нужно иду», а Devo andare.",
+    points: [
+      ["non devo — это «не обязан»", "Non devo pagare — мне не нужно платить, не требуется. Это не запрет. Запрет — non posso или non si può."],
+      ["Чтобы сказать «ей», нужно местоимение", "Deve lavorare поймут как «Вам нужно работать». Именно «ей» — только Lei deve lavorare."],
+      ["dovere и деньги", "Тот же глагол значит «быть должным деньги»: Quanto le devo? — сколько я вам должен? В этом наборе таких фраз нет, но форма та же."],
+      ["Не путать с servire", "devo + инфинитив — нужно что-то сделать. mi serve — нужен предмет. «Мне нужно такси» — mi serve un taxi."]
+    ]
+  },
+
+  essere: {
+    intro: "essere — быть. В русском «я устал», в итальянском обязательно «я есть усталый»: глагол не выбрасывается никогда.",
+    points: [
+      ["Формы не похожи", "sono, sei, è — глагол неправильный, учится целиком."],
+      ["Три способа попросить одно и то же", "Vorrei un caffè — я хотел бы. Posso avere un caffè? — можно мне. Ho bisogno di un caffè — мне нужно. Первое вежливее всего, третье — когда это правда необходимость."],
+      ["per favore и prego — разные «пожалуйста»", "per favore говоришь, когда просишь. prego — когда отвечаешь на grazie или пропускаешь вперёд. Перепутать легко, звучит странно."],
+      ["Прилагательное согласуется", "Мужской род на -o, женский на -a: stanco / stanca, pronto / pronta. Здесь везде мужской."],
+      ["è с акцентом", "è — это «есть», а e без акцента — «и». Разные слова."]
+    ]
+  },
+  avere: {
+    intro: "avere — иметь. Русское «у меня есть» по-итальянски всегда ho: отдельного оборота нет.",
+    points: [
+      ["h не читается", "ho, hai, ha — h немая. Она только на письме, чтобы отличать от o, ai, a."],
+      ["Отрицание не меняет глагол", "Non ho tempo. В русском падеж меняется — «нет времени», в итальянском ничего."],
+      ["Возраст и голод тоже через avere", "Ho trent'anni, ho fame. Буквально «имею тридцать лет», «имею голод»."]
+    ]
+  },
+  fare: {
+    intro: "fare — делать. Один из самых частых глаголов: входит в десятки готовых оборотов.",
+    points: [
+      ["Формы неправильные", "faccio, fai, fa — запоминаются целиком."],
+      ["Готовые обороты", "fare colazione — завтракать, fare una foto — фотографировать, fare la spesa — ходить за продуктами."],
+      ["Che tempo fa?", "О погоде тоже говорят через fare: «какая погода?» буквально «что делает время»."]
+    ]
+  },
+  stare: {
+    intro: "stare — находиться и «поживать». Come sta? — «как дела?» на вежливое Вы.",
+    points: [
+      ["Основа общая", "st-o, st-ai, st-a. Окончания те же, что у andare."],
+      ["stare, а не essere", "О самочувствии и местонахождении говорят stare: Sto bene, а не Sono bene."],
+      ["Главная фраза", "Come sta? — как Вы? Come stai? — как ты? Ответ: Sto bene, grazie."]
+    ]
+  },
+  volere: {
+    intro: "volere — хотеть. Но вслух почти всегда звучит не voglio, а vorrei — «я хотел бы». Это одна и та же вещь, сказанная вежливо.",
+    points: [
+      ["Заказ начинается с vorrei", "Vorrei un caffè — так делают заказ. Voglio un caffè звучит как требование, почти грубо."],
+      ["Говоришь vorrei, слышишь vuole", "Ты просишь: Vorrei il conto. Официант спрашивает: Vuole un caffè? Это две стороны одного глагола, и нужны обе."],
+      ["Отрицают через voglio", "Non vorrei почти не говорят. «Я не хочу» — это Non voglio."],
+      ["После volere — или предмет, или инфинитив", "Vorrei un tavolo и Vorrei pagare устроены одинаково."],
+      ["Артикль обязателен", "Не «vorrei caffè», а vorrei un caffè. Существительное без артикля почти не ставится."],
+      ["Прилагательное идёт после", "По-русски «горячий кофе», по-итальянски наоборот: un caffè caldo, una macchina rossa."],
+      ["Три способа попросить одно и то же", "Vorrei un caffè — я хотел бы. Posso avere un caffè? — можно мне. Ho bisogno di un caffè — мне нужно. Первое вежливее всего, третье — когда это правда необходимость."],
+      ["per favore и prego — разные «пожалуйста»", "per favore говоришь, когда просишь. prego — когда отвечаешь на grazie или пропускаешь вперёд. Перепутать легко, звучит странно."],
+      ["Прилагательное согласуется", "rosso для мужского, rossa для женского. Но те, что кончаются на -e, не меняются: un tavolo grande, una macchina grande. И blu не меняется никогда."]
+    ]
+  },
+  potere: {
+    intro: "potere — мочь. Всегда с инфинитивом: Posso pagare, а не «posso» отдельно.",
+    points: [
+      ["Формы неправильные", "posso, puoi, può. У può есть акцент — он обязателен."],
+      ["Вежливая просьба", "Può aiutarmi? — «Вы можете мне помочь?» Самая полезная фраза из всего блока."],
+      ["non posso — это «нельзя»", "В отличие от non devo, которое значит «не обязан»."]
+    ]
+  },
+  servire: {
+    intro: "servire — быть нужным. Глагол стоит в третьем лице и не меняется, меняется местоимение перед ним.",
+    points: [
+      ["Меняется не глагол, а местоимение", "mi serve, ti serve, Le serve. Само serve остаётся тем же."],
+      ["Нужен предмет — servire", "Mi serve un taxi. Нужно что-то сделать — devo: Devo chiamare un taxi."],
+      ["Если вещей несколько", "Mi servono due camere — глагол становится servono."]
+    ]
+  },
+  andare: {
+    intro: "andare — идти и ехать. Одно слово на оба русских глагола: способ передвижения не важен.",
+    points: [
+      ["Формы неправильные", "vado, vai, va — от инфинитива почти ничего не осталось."],
+      ["a или in", "В города — a Roma, a Milano. В страны и помещения — in Italia, in hotel."],
+      ["Va bene", "Буквально «идёт хорошо», на деле «хорошо, договорились». Самый частый ответ в разговоре."]
+    ]
+  },
+  venire: {
+    intro: "venire — приходить, приезжать. Движение к тому, с кем говоришь, в отличие от andare — движения от себя.",
+    points: [
+      ["Формы неправильные", "vengo, vieni, viene."],
+      ["venire или andare", "Vengo — иду к тебе, туда, где ты. Vado — иду куда-то ещё."],
+      ["Приглашение", "Vieni con me? — «пойдёшь со мной?» Vuole venire? — вежливый вариант."]
+    ]
+  },
+  sapere: {
+    intro: "sapere — знать факт, уметь что-то. Короткие формы so, sai, sa легко спутать с sono и sei.",
+    points: [
+      ["Формы коротки до предела", "so, sai, sa. Их часто путают с формами essere — sono, sei."],
+      ["sapere или conoscere", "sapere — знать факт: So dov'è. conoscere — быть знакомым с человеком или городом."],
+      ["Non lo so", "«Я не знаю» в разговоре обычно звучит как Non lo so, с «это» внутри."]
+    ]
+  },
+  capire: {
+    intro: "capire — понимать. Глагол на -ire со вставкой -isc-, которая появляется во всех трёх формах.",
+    points: [
+      ["Вставка -isc-", "От инфинитива capire остаётся cap-, дальше вставляется -isc- и только потом окончание."],
+      ["Non capisco", "Главная фраза путешественника. Говорится без «я»: местоимение в итальянском опускают."],
+      ["Так же устроены", "finire — заканчивать, preferire — предпочитать. Та же вставка."]
+    ]
+  },
+  parlare: {
+    intro: "parlare — говорить. Образцовый правильный глагол на -are: по нему строятся сотни других.",
+    points: [
+      ["Основа общая", "parl-o, parl-i, parl-a. Так же спрягаются lavorare, aspettare, pagare и ещё сотни глаголов на -are."],
+      ["Язык без артикля", "Parlo italiano — без артикля и без предлога. Не «parlo in italiano»."],
+      ["Parla inglese?", "Вопрос, с которого начинается половина разговоров в поездке."]
+    ]
+  },
+  vedere: {
+    intro: "vedere — видеть. Правильный глагол на -ere, основа ved- не меняется.",
+    points: [
+      ["Основа общая", "ved-o, ved-i, ved-e. Так же спрягаются prendere, scendere, chiedere."],
+      ["vedere или guardare", "vedere — видеть, замечать. guardare — смотреть намеренно."],
+      ["Ci vediamo", "«Увидимся» — стандартное прощание."]
+    ]
+  },
+  cercare: {
+    intro: "cercare — искать. Правильный глагол на -are, но во втором лице появляется лишняя h.",
+    points: [
+      ["Откуда h в cerchi", "Без неё сочетание ci читалось бы как «чи». h сохраняет звук «к»: cerchi — «черки»... точнее «керки»."],
+      ["Без предлога", "Cerco l'hotel — ищу отель. Предлог не нужен, в отличие от английского look for."],
+      ["Главная фраза", "Cerco la stazione — то, что говорят, когда заблудились."]
+    ]
+  },
+  prendere: {
+    intro: "prendere — брать. В итальянском им же «садятся» на транспорт и «берут» еду в кафе.",
+    points: [
+      ["Основа общая", "prend-o, prend-i, prend-e."],
+      ["Транспорт тоже prendere", "Prendo il treno — сажусь на поезд. Отдельного глагола «садиться» не нужно."],
+      ["Заказ в баре", "Prendo un caffè — так делают заказ. Буквально «беру кофе»."]
+    ]
+  }
+};
+
+const VERB_PHRASES = {
+  dovere: [
+    // ── Уровень 1 — новое: andare ───────────────────────────────
+    { id: "dovere-1", level: 1, form: "devo", type: "aff", it: "Devo andare.", ru: "Мне нужно идти." },
+    { id: "dovere-2", level: 1, form: "devi", type: "aff", it: "Devi andare.", ru: "Тебе нужно идти." },
+    { id: "dovere-3", level: 1, form: "deve", type: "aff", it: "Deve andare.", ru: "Вам нужно идти." },
+    { id: "dovere-4", level: 1, form: "devo", type: "neg", it: "Non devo andare.", ru: "Мне не нужно идти." },
+    { id: "dovere-5", level: 1, form: "devi", type: "neg", it: "Non devi andare.", ru: "Тебе не нужно идти." },
+    { id: "dovere-6", level: 1, form: "deve", type: "neg", it: "Non deve andare.", ru: "Вам не нужно идти." },
+
+    // ── Уровень 2 — новое: pagare ───────────────────────────────
+    { id: "dovere-7", level: 2, form: "devo", type: "aff", it: "Devo pagare.", ru: "Мне нужно платить." },
+    { id: "dovere-8", level: 2, form: "devi", type: "aff", it: "Devi pagare.", ru: "Тебе нужно платить." },
+    { id: "dovere-9", level: 2, form: "deve", type: "aff", it: "Deve pagare.", ru: "Вам нужно платить." },
+    { id: "dovere-10", level: 2, form: "devo", type: "neg", it: "Non devo pagare.", ru: "Мне не нужно платить." },
+    { id: "dovere-11", level: 2, form: "devi", type: "neg", it: "Non devi pagare.", ru: "Тебе не нужно платить." },
+    { id: "dovere-12", level: 2, form: "deve", type: "neg", it: "Non deve pagare.", ru: "Вам не нужно платить." },
+
+    // ── Уровень 3 — новое: aspettare ────────────────────────────
+    { id: "dovere-13", level: 3, form: "devo", type: "aff", it: "Devo aspettare.", ru: "Мне нужно ждать." },
+    { id: "dovere-14", level: 3, form: "devi", type: "aff", it: "Devi aspettare.", ru: "Тебе нужно ждать." },
+    { id: "dovere-15", level: 3, form: "deve", type: "aff", it: "Deve aspettare.", ru: "Вам нужно ждать." },
+    { id: "dovere-16", level: 3, form: "devo", type: "neg", it: "Non devo aspettare.", ru: "Мне не нужно ждать." },
+    { id: "dovere-17", level: 3, form: "devi", type: "neg", it: "Non devi aspettare.", ru: "Тебе не нужно ждать." },
+    { id: "dovere-18", level: 3, form: "deve", type: "neg", it: "Non deve aspettare.", ru: "Вам не нужно ждать." },
+
+    // ── Уровень 4 — новое: adesso ───────────────────────────────
+    { id: "dovere-19", level: 4, form: "devo", type: "aff", it: "Devo andare adesso.", ru: "Мне нужно идти сейчас." },
+    { id: "dovere-20", level: 4, form: "devi", type: "aff", it: "Devi pagare adesso.", ru: "Тебе нужно платить сейчас." },
+    { id: "dovere-21", level: 4, form: "deve", type: "aff", it: "Deve aspettare adesso.", ru: "Вам нужно ждать сейчас." },
+    { id: "dovere-22", level: 4, form: "devo", type: "quest", it: "Devo pagare adesso?", ru: "Мне нужно платить сейчас?" },
+    { id: "dovere-23", level: 4, form: "devi", type: "quest", it: "Devi andare adesso?", ru: "Тебе нужно идти сейчас?" },
+    { id: "dovere-24", level: 4, form: "deve", type: "quest", it: "Deve andare adesso?", ru: "Вам нужно идти сейчас?" },
+
+    // ── Уровень 5 — новое: qui ──────────────────────────────────
+    { id: "dovere-25", level: 5, form: "devo", type: "aff", it: "Devo aspettare qui.", ru: "Мне нужно ждать здесь." },
+    { id: "dovere-26", level: 5, form: "devi", type: "aff", it: "Devi aspettare qui.", ru: "Тебе нужно ждать здесь." },
+    { id: "dovere-27", level: 5, form: "deve", type: "aff", it: "Deve aspettare qui.", ru: "Вам нужно ждать здесь." },
+    { id: "dovere-28", level: 5, form: "devo", type: "quest", it: "Devo pagare qui?", ru: "Мне нужно платить здесь?" },
+    { id: "dovere-29", level: 5, form: "devi", type: "quest", it: "Devi pagare qui?", ru: "Тебе нужно платить здесь?" },
+    { id: "dovere-30", level: 5, form: "deve", type: "quest", it: "Deve pagare qui?", ru: "Вам нужно платить здесь?" },
+
+    // ── Уровень 6 — новое: scendere ─────────────────────────────
+    { id: "dovere-31", level: 6, form: "devo", type: "aff", it: "Devo scendere.", ru: "Мне нужно выходить." },
+    { id: "dovere-32", level: 6, form: "devi", type: "aff", it: "Devi scendere.", ru: "Тебе нужно выходить." },
+    { id: "dovere-33", level: 6, form: "deve", type: "aff", it: "Deve scendere.", ru: "Вам нужно выходить." },
+    { id: "dovere-34", level: 6, form: "devo", type: "quest", it: "Devo scendere qui?", ru: "Мне нужно выходить здесь?" },
+    { id: "dovere-35", level: 6, form: "devi", type: "quest", it: "Devi scendere qui?", ru: "Тебе нужно выходить здесь?" },
+    { id: "dovere-36", level: 6, form: "deve", type: "quest", it: "Deve scendere qui?", ru: "Вам нужно выходить здесь?" },
+
+    // ── Уровень 7 — новое: prenotare ────────────────────────────
+    { id: "dovere-37", level: 7, form: "devo", type: "aff", it: "Devo prenotare.", ru: "Мне нужно бронировать." },
+    { id: "dovere-38", level: 7, form: "devi", type: "aff", it: "Devi prenotare.", ru: "Тебе нужно бронировать." },
+    { id: "dovere-39", level: 7, form: "deve", type: "aff", it: "Deve prenotare.", ru: "Вам нужно бронировать." },
+    { id: "dovere-40", level: 7, form: "devo", type: "neg", it: "Non devo prenotare.", ru: "Мне не нужно бронировать." },
+    { id: "dovere-41", level: 7, form: "devi", type: "neg", it: "Non devi prenotare.", ru: "Тебе не нужно бронировать." },
+    { id: "dovere-42", level: 7, form: "deve", type: "neg", it: "Non deve prenotare.", ru: "Вам не нужно бронировать." },
+
+    // ── Уровень 8 — новое: lavorare ─────────────────────────────
+    { id: "dovere-43", level: 8, form: "devo", type: "aff", it: "Devo lavorare.", ru: "Мне нужно работать." },
+    { id: "dovere-44", level: 8, form: "devi", type: "aff", it: "Devi lavorare.", ru: "Тебе нужно работать." },
+    { id: "dovere-45", level: 8, form: "deve", type: "aff", it: "Deve lavorare.", ru: "Вам нужно работать." },
+    { id: "dovere-46", level: 8, form: "devo", type: "neg", it: "Non devo lavorare.", ru: "Мне не нужно работать." },
+    { id: "dovere-47", level: 8, form: "devi", type: "neg", it: "Non devi lavorare.", ru: "Тебе не нужно работать." },
+    { id: "dovere-48", level: 8, form: "deve", type: "neg", it: "Non deve lavorare.", ru: "Вам не нужно работать." },
+
+    // ── Уровень 9 — новое: oggi ─────────────────────────────────
+    { id: "dovere-49", level: 9, form: "devo", type: "aff", it: "Devo lavorare oggi.", ru: "Мне нужно работать сегодня." },
+    { id: "dovere-50", level: 9, form: "devi", type: "aff", it: "Devi lavorare oggi.", ru: "Тебе нужно работать сегодня." },
+    { id: "dovere-51", level: 9, form: "deve", type: "aff", it: "Deve lavorare oggi.", ru: "Вам нужно работать сегодня." },
+    { id: "dovere-52", level: 9, form: "devo", type: "neg", it: "Non devo lavorare oggi.", ru: "Мне не нужно работать сегодня." },
+    { id: "dovere-53", level: 9, form: "devi", type: "neg", it: "Non devi lavorare oggi.", ru: "Тебе не нужно работать сегодня." },
+    { id: "dovere-54", level: 9, form: "deve", type: "neg", it: "Non deve lavorare oggi.", ru: "Вам не нужно работать сегодня." },
+
+    // ── Уровень 10 — новое: tornare ─────────────────────────────
+    { id: "dovere-55", level: 10, form: "devo", type: "aff", it: "Devo tornare.", ru: "Мне нужно возвращаться." },
+    { id: "dovere-56", level: 10, form: "devi", type: "aff", it: "Devi tornare.", ru: "Тебе нужно возвращаться." },
+    { id: "dovere-57", level: 10, form: "deve", type: "aff", it: "Deve tornare.", ru: "Вам нужно возвращаться." },
+    { id: "dovere-58", level: 10, form: "devo", type: "quest", it: "Devo tornare adesso?", ru: "Мне нужно возвращаться сейчас?" },
+    { id: "dovere-59", level: 10, form: "devi", type: "quest", it: "Devi tornare adesso?", ru: "Тебе нужно возвращаться сейчас?" },
+    { id: "dovere-60", level: 10, form: "deve", type: "quest", it: "Deve tornare adesso?", ru: "Вам нужно возвращаться сейчас?" },
+
+    // ── Уровень 11 — новое: cosa fare ───────────────────────────
+    { id: "dovere-61", level: 11, form: "devo", type: "quest", it: "Cosa devo fare?", ru: "Что мне нужно делать?" },
+    { id: "dovere-62", level: 11, form: "devi", type: "quest", it: "Cosa devi fare?", ru: "Что тебе нужно делать?" },
+    { id: "dovere-63", level: 11, form: "deve", type: "quest", it: "Cosa deve fare?", ru: "Что Вам нужно делать?" },
+
+    // ── Уровень 12 — новое: dove ────────────────────────────────
+    { id: "dovere-64", level: 12, form: "devo", type: "quest", it: "Dove devo andare?", ru: "Куда мне нужно идти?" },
+    { id: "dovere-65", level: 12, form: "devi", type: "quest", it: "Dove devi andare?", ru: "Куда тебе нужно идти?" },
+    { id: "dovere-66", level: 12, form: "deve", type: "quest", it: "Dove deve andare?", ru: "Куда Вам нужно идти?" },
+
+    // ── Уровень 13 — новое: prendere il treno ───────────────────
+    { id: "dovere-67", level: 13, form: "devo", type: "aff", it: "Devo prendere il treno.", ru: "Мне нужно сесть на поезд." },
+    { id: "dovere-68", level: 13, form: "devi", type: "aff", it: "Devi prendere il treno.", ru: "Тебе нужно сесть на поезд." },
+    { id: "dovere-69", level: 13, form: "deve", type: "aff", it: "Deve prendere il treno.", ru: "Вам нужно сесть на поезд." },
+    { id: "dovere-70", level: 13, form: "devo", type: "neg", it: "Non devo prendere il treno.", ru: "Мне не нужно садиться на поезд." },
+    { id: "dovere-71", level: 13, form: "devi", type: "quest", it: "Devi prendere il treno adesso?", ru: "Тебе нужно сесть на поезд сейчас?" },
+    { id: "dovere-72", level: 13, form: "deve", type: "quest", it: "Deve prendere il treno qui?", ru: "Вам нужно сесть на поезд здесь?" },
+
+    // ── Уровень 14 — новое: il conto ────────────────────────────
+    { id: "dovere-73", level: 14, form: "devo", type: "aff", it: "Devo pagare il conto.", ru: "Мне нужно оплатить счёт." },
+    { id: "dovere-74", level: 14, form: "devi", type: "aff", it: "Devi pagare il conto.", ru: "Тебе нужно оплатить счёт." },
+    { id: "dovere-75", level: 14, form: "deve", type: "aff", it: "Deve pagare il conto.", ru: "Вам нужно оплатить счёт." },
+
+    // ── Уровень 15 — новое: una camera ──────────────────────────
+    { id: "dovere-76", level: 15, form: "devo", type: "aff", it: "Devo prenotare una camera.", ru: "Мне нужно забронировать номер." },
+    { id: "dovere-77", level: 15, form: "devi", type: "aff", it: "Devi prenotare una camera.", ru: "Тебе нужно забронировать номер." },
+    { id: "dovere-78", level: 15, form: "deve", type: "aff", it: "Deve prenotare una camera.", ru: "Вам нужно забронировать номер." },
+
+    // ── Уровень 16 — новое: provare la pizza ────────────────────
+    { id: "dovere-79", level: 16, form: "devi", type: "aff", it: "Devi provare la pizza.", ru: "Тебе нужно попробовать пиццу." },
+    { id: "dovere-80", level: 16, form: "deve", type: "aff", it: "Deve provare la pizza.", ru: "Вам нужно попробовать пиццу." },
+    { id: "dovere-81", level: 16, form: "devo", type: "quest", it: "Devo provare la pizza?", ru: "Мне нужно попробовать пиццу?" },
+    { id: "dovere-82", level: 16, form: "devi", type: "neg", it: "Non devi provare la pizza.", ru: "Тебе не нужно пробовать пиццу." },
+
+    // ── Уровень 17 — новое: chiamare un taxi ────────────────────
+    { id: "dovere-83", level: 17, form: "devo", type: "aff", it: "Devo chiamare un taxi.", ru: "Мне нужно вызвать такси." },
+    { id: "dovere-84", level: 17, form: "devi", type: "aff", it: "Devi chiamare un taxi.", ru: "Тебе нужно вызвать такси." },
+    { id: "dovere-85", level: 17, form: "deve", type: "aff", it: "Deve chiamare un taxi.", ru: "Вам нужно вызвать такси." },
+
+    // ── Уровень 18 — новое: Lei ─────────────────────────────────
+    { id: "dovere-86", level: 18, form: "deve", type: "aff", it: "Lei deve lavorare.", ru: "Ей нужно работать." },
+    { id: "dovere-87", level: 18, form: "deve", type: "aff", it: "Lei deve andare adesso.", ru: "Ей нужно идти сейчас." },
+    { id: "dovere-88", level: 18, form: "deve", type: "neg", it: "Lei non deve lavorare oggi.", ru: "Ей не нужно работать сегодня." },
+  ],
+
+  essere: [
+    // ── Уровень 1 — новое: stanco ─────────────────────────────
+    { id: "essere-1", level: 1, form: "sono", type: "aff", it: "Sono stanco.", ru: "Я устал." },
+    { id: "essere-2", level: 1, form: "sei", type: "aff", it: "Sei stanco.", ru: "Ты устал." },
+    { id: "essere-3", level: 1, form: "è", type: "aff", it: "È stanco.", ru: "Он устал." },
+    { id: "essere-4", level: 1, form: "sono", type: "neg", it: "Non sono stanco.", ru: "Я не устал." },
+    { id: "essere-5", level: 1, form: "sei", type: "neg", it: "Non sei stanco.", ru: "Ты не устал." },
+    { id: "essere-6", level: 1, form: "è", type: "neg", it: "Non è stanco.", ru: "Он не устал." },
+
+    // ── Уровень 2 — новое: pronto ─────────────────────────────
+    { id: "essere-7", level: 2, form: "sono", type: "aff", it: "Sono pronto.", ru: "Я готов." },
+    { id: "essere-8", level: 2, form: "sei", type: "aff", it: "Sei pronto.", ru: "Ты готов." },
+    { id: "essere-9", level: 2, form: "è", type: "aff", it: "È pronto.", ru: "Он готов." },
+    { id: "essere-10", level: 2, form: "sono", type: "neg", it: "Non sono pronto.", ru: "Я не готов." },
+    { id: "essere-11", level: 2, form: "sei", type: "neg", it: "Non sei pronto.", ru: "Ты не готов." },
+    { id: "essere-12", level: 2, form: "è", type: "neg", it: "Non è pronto.", ru: "Он не готов." },
+
+    // ── Уровень 3 — новое: libero ─────────────────────────────
+    { id: "essere-13", level: 3, form: "sono", type: "aff", it: "Sono libero.", ru: "Я свободен." },
+    { id: "essere-14", level: 3, form: "sei", type: "aff", it: "Sei libero.", ru: "Ты свободен." },
+    { id: "essere-15", level: 3, form: "è", type: "aff", it: "È libero.", ru: "Он свободен." },
+    { id: "essere-16", level: 3, form: "sono", type: "neg", it: "Non sono libero.", ru: "Я не свободен." },
+    { id: "essere-17", level: 3, form: "sei", type: "neg", it: "Non sei libero.", ru: "Ты не свободен." },
+    { id: "essere-18", level: 3, form: "è", type: "neg", it: "Non è libero.", ru: "Он не свободен." },
+
+    // ── Уровень 4 — новое: sicuro ─────────────────────────────
+    { id: "essere-19", level: 4, form: "sono", type: "aff", it: "Sono sicuro.", ru: "Я уверен." },
+    { id: "essere-20", level: 4, form: "sei", type: "aff", it: "Sei sicuro.", ru: "Ты уверен." },
+    { id: "essere-21", level: 4, form: "è", type: "aff", it: "È sicuro.", ru: "Он уверен." },
+    { id: "essere-22", level: 4, form: "sono", type: "neg", it: "Non sono sicuro.", ru: "Я не уверен." },
+    { id: "essere-23", level: 4, form: "sei", type: "neg", it: "Non sei sicuro.", ru: "Ты не уверен." },
+    { id: "essere-24", level: 4, form: "è", type: "neg", it: "Non è sicuro.", ru: "Он не уверен." },
+
+    // ── Уровень 5 — новое: in ritardo ─────────────────────────
+    { id: "essere-25", level: 5, form: "sei", type: "quest", it: "Sei in ritardo?", ru: "Ты опоздал?" },
+    { id: "essere-26", level: 5, form: "è", type: "quest", it: "È in ritardo?", ru: "Он опоздал?" },
+
+    // ── Уровень 6 — новое: contento ───────────────────────────
+    { id: "essere-27", level: 6, form: "sei", type: "quest", it: "Sei contento?", ru: "Ты доволен?" },
+    { id: "essere-28", level: 6, form: "è", type: "quest", it: "È contento?", ru: "Он доволен?" },
+  ],
+
+  avere: [
+    // ── Уровень 1 — новое: tempo ──────────────────────────────
+    { id: "avere-1", level: 1, form: "ho", type: "aff", it: "Ho tempo.", ru: "У меня есть время." },
+    { id: "avere-2", level: 1, form: "hai", type: "aff", it: "Hai tempo.", ru: "У тебя есть время." },
+    { id: "avere-3", level: 1, form: "ha", type: "aff", it: "Ha tempo.", ru: "У вас есть время." },
+    { id: "avere-4", level: 1, form: "ho", type: "neg", it: "Non ho tempo.", ru: "У меня нет времени." },
+    { id: "avere-5", level: 1, form: "hai", type: "neg", it: "Non hai tempo.", ru: "У тебя нет времени." },
+    { id: "avere-6", level: 1, form: "ha", type: "neg", it: "Non ha tempo.", ru: "У вас нет времени." },
+
+    // ── Уровень 2 — новое: soldi ──────────────────────────────
+    { id: "avere-7", level: 2, form: "ho", type: "aff", it: "Ho soldi.", ru: "У меня есть деньги." },
+    { id: "avere-8", level: 2, form: "hai", type: "aff", it: "Hai soldi.", ru: "У тебя есть деньги." },
+    { id: "avere-9", level: 2, form: "ha", type: "aff", it: "Ha soldi.", ru: "У вас есть деньги." },
+    { id: "avere-10", level: 2, form: "ho", type: "neg", it: "Non ho soldi.", ru: "У меня нет денег." },
+    { id: "avere-11", level: 2, form: "hai", type: "neg", it: "Non hai soldi.", ru: "У тебя нет денег." },
+    { id: "avere-12", level: 2, form: "ha", type: "neg", it: "Non ha soldi.", ru: "У вас нет денег." },
+
+    // ── Уровень 3 — новое: un problema ────────────────────────
+    { id: "avere-13", level: 3, form: "ho", type: "aff", it: "Ho un problema.", ru: "У меня есть проблема." },
+    { id: "avere-14", level: 3, form: "hai", type: "aff", it: "Hai un problema.", ru: "У тебя есть проблема." },
+    { id: "avere-15", level: 3, form: "ha", type: "aff", it: "Ha un problema.", ru: "У вас есть проблема." },
+    { id: "avere-16", level: 3, form: "ho", type: "neg", it: "Non ho un problema.", ru: "У меня нет проблемы." },
+    { id: "avere-17", level: 3, form: "hai", type: "neg", it: "Non hai un problema.", ru: "У тебя нет проблемы." },
+    { id: "avere-18", level: 3, form: "ha", type: "neg", it: "Non ha un problema.", ru: "У вас нет проблемы." },
+
+    // ── Уровень 4 — новое: la carta ───────────────────────────
+    { id: "avere-19", level: 4, form: "ho", type: "aff", it: "Ho la carta.", ru: "У меня есть карта." },
+    { id: "avere-20", level: 4, form: "hai", type: "aff", it: "Hai la carta.", ru: "У тебя есть карта." },
+    { id: "avere-21", level: 4, form: "ha", type: "aff", it: "Ha la carta.", ru: "У вас есть карта." },
+    { id: "avere-22", level: 4, form: "ho", type: "neg", it: "Non ho la carta.", ru: "У меня нет карты." },
+    { id: "avere-23", level: 4, form: "hai", type: "neg", it: "Non hai la carta.", ru: "У тебя нет карты." },
+    { id: "avere-24", level: 4, form: "ha", type: "neg", it: "Non ha la carta.", ru: "У вас нет карты." },
+
+    // ── Уровень 5 — новое: una camera ─────────────────────────
+    { id: "avere-25", level: 5, form: "hai", type: "quest", it: "Hai una camera?", ru: "У тебя есть номер?" },
+    { id: "avere-26", level: 5, form: "ha", type: "quest", it: "Ha una camera?", ru: "У вас есть номер?" },
+
+    // ── Уровень 6 — новое: il biglietto ───────────────────────
+    { id: "avere-27", level: 6, form: "hai", type: "quest", it: "Hai il biglietto?", ru: "У тебя есть билет?" },
+    { id: "avere-28", level: 6, form: "ha", type: "quest", it: "Ha il biglietto?", ru: "У вас есть билет?" },
+  ],
+
+  fare: [
+    // ── Уровень 1 — новое: una foto ───────────────────────────
+    { id: "fare-1", level: 1, form: "faccio", type: "aff", it: "Faccio una foto.", ru: "Я делаю фото." },
+    { id: "fare-2", level: 1, form: "fai", type: "aff", it: "Fai una foto.", ru: "Ты делаешь фото." },
+    { id: "fare-3", level: 1, form: "fa", type: "aff", it: "Fa una foto.", ru: "Вы делаете фото." },
+    { id: "fare-4", level: 1, form: "faccio", type: "neg", it: "Non faccio una foto.", ru: "Я не делаю фото." },
+    { id: "fare-5", level: 1, form: "fai", type: "neg", it: "Non fai una foto.", ru: "Ты не делаешь фото." },
+    { id: "fare-6", level: 1, form: "fa", type: "neg", it: "Non fa una foto.", ru: "Вы не делаете фото." },
+
+    // ── Уровень 2 — новое: una domanda ────────────────────────
+    { id: "fare-7", level: 2, form: "faccio", type: "aff", it: "Faccio una domanda.", ru: "Я делаю вопрос." },
+    { id: "fare-8", level: 2, form: "fai", type: "aff", it: "Fai una domanda.", ru: "Ты делаешь вопрос." },
+    { id: "fare-9", level: 2, form: "fa", type: "aff", it: "Fa una domanda.", ru: "Вы делаете вопрос." },
+    { id: "fare-10", level: 2, form: "faccio", type: "neg", it: "Non faccio una domanda.", ru: "Я не делаю вопрос." },
+    { id: "fare-11", level: 2, form: "fai", type: "neg", it: "Non fai una domanda.", ru: "Ты не делаешь вопрос." },
+    { id: "fare-12", level: 2, form: "fa", type: "neg", it: "Non fa una domanda.", ru: "Вы не делаете вопрос." },
+
+    // ── Уровень 3 — новое: un errore ──────────────────────────
+    { id: "fare-13", level: 3, form: "faccio", type: "aff", it: "Faccio un errore.", ru: "Я делаю ошибку." },
+    { id: "fare-14", level: 3, form: "fai", type: "aff", it: "Fai un errore.", ru: "Ты делаешь ошибку." },
+    { id: "fare-15", level: 3, form: "fa", type: "aff", it: "Fa un errore.", ru: "Вы делаете ошибку." },
+    { id: "fare-16", level: 3, form: "faccio", type: "neg", it: "Non faccio un errore.", ru: "Я не делаю ошибку." },
+    { id: "fare-17", level: 3, form: "fai", type: "neg", it: "Non fai un errore.", ru: "Ты не делаешь ошибку." },
+    { id: "fare-18", level: 3, form: "fa", type: "neg", it: "Non fa un errore.", ru: "Вы не делаете ошибку." },
+
+    // ── Уровень 4 — новое: la spesa ───────────────────────────
+    { id: "fare-19", level: 4, form: "faccio", type: "aff", it: "Faccio la spesa.", ru: "Я делаю покупки." },
+    { id: "fare-20", level: 4, form: "fai", type: "aff", it: "Fai la spesa.", ru: "Ты делаешь покупки." },
+    { id: "fare-21", level: 4, form: "fa", type: "aff", it: "Fa la spesa.", ru: "Вы делаете покупки." },
+    { id: "fare-22", level: 4, form: "faccio", type: "neg", it: "Non faccio la spesa.", ru: "Я не делаю покупки." },
+    { id: "fare-23", level: 4, form: "fai", type: "neg", it: "Non fai la spesa.", ru: "Ты не делаешь покупки." },
+    { id: "fare-24", level: 4, form: "fa", type: "neg", it: "Non fa la spesa.", ru: "Вы не делаете покупки." },
+
+    // ── Уровень 5 — новое: colazione ──────────────────────────
+    { id: "fare-25", level: 5, form: "fai", type: "quest", it: "Fai colazione?", ru: "Ты делаешь завтрак?" },
+    { id: "fare-26", level: 5, form: "fa", type: "quest", it: "Fa colazione?", ru: "Вы делаете завтрак?" },
+
+    // ── Уровень 6 — новое: il check-in ────────────────────────
+    { id: "fare-27", level: 6, form: "fai", type: "quest", it: "Fai il check-in?", ru: "Ты делаешь регистрацию?" },
+    { id: "fare-28", level: 6, form: "fa", type: "quest", it: "Fa il check-in?", ru: "Вы делаете регистрацию?" },
+  ],
+
+  stare: [
+    // ── Уровень 1 — новое: bene ───────────────────────────────
+    { id: "stare-1", level: 1, form: "sto", type: "aff", it: "Sto bene.", ru: "Я в порядке." },
+    { id: "stare-2", level: 1, form: "stai", type: "aff", it: "Stai bene.", ru: "Ты в порядке." },
+    { id: "stare-3", level: 1, form: "sta", type: "aff", it: "Sta bene.", ru: "Вы в порядке." },
+    { id: "stare-4", level: 1, form: "sto", type: "neg", it: "Non sto bene.", ru: "Я не в порядке." },
+    { id: "stare-5", level: 1, form: "stai", type: "neg", it: "Non stai bene.", ru: "Ты не в порядке." },
+    { id: "stare-6", level: 1, form: "sta", type: "neg", it: "Non sta bene.", ru: "Вы не в порядке." },
+
+    // ── Уровень 2 — новое: qui ────────────────────────────────
+    { id: "stare-7", level: 2, form: "sto", type: "aff", it: "Sto qui.", ru: "Я здесь." },
+    { id: "stare-8", level: 2, form: "stai", type: "aff", it: "Stai qui.", ru: "Ты здесь." },
+    { id: "stare-9", level: 2, form: "sta", type: "aff", it: "Sta qui.", ru: "Вы здесь." },
+    { id: "stare-10", level: 2, form: "sto", type: "neg", it: "Non sto qui.", ru: "Я не здесь." },
+    { id: "stare-11", level: 2, form: "stai", type: "neg", it: "Non stai qui.", ru: "Ты не здесь." },
+    { id: "stare-12", level: 2, form: "sta", type: "neg", it: "Non sta qui.", ru: "Вы не здесь." },
+
+    // ── Уровень 3 — новое: a casa ─────────────────────────────
+    { id: "stare-13", level: 3, form: "sto", type: "aff", it: "Sto a casa.", ru: "Я дома." },
+    { id: "stare-14", level: 3, form: "stai", type: "aff", it: "Stai a casa.", ru: "Ты дома." },
+    { id: "stare-15", level: 3, form: "sta", type: "aff", it: "Sta a casa.", ru: "Вы дома." },
+    { id: "stare-16", level: 3, form: "sto", type: "neg", it: "Non sto a casa.", ru: "Я не дома." },
+    { id: "stare-17", level: 3, form: "stai", type: "neg", it: "Non stai a casa.", ru: "Ты не дома." },
+    { id: "stare-18", level: 3, form: "sta", type: "neg", it: "Non sta a casa.", ru: "Вы не дома." },
+
+    // ── Уровень 4 — новое: in hotel ───────────────────────────
+    { id: "stare-19", level: 4, form: "sto", type: "aff", it: "Sto in hotel.", ru: "Я в отеле." },
+    { id: "stare-20", level: 4, form: "stai", type: "aff", it: "Stai in hotel.", ru: "Ты в отеле." },
+    { id: "stare-21", level: 4, form: "sta", type: "aff", it: "Sta in hotel.", ru: "Вы в отеле." },
+    { id: "stare-22", level: 4, form: "sto", type: "neg", it: "Non sto in hotel.", ru: "Я не в отеле." },
+    { id: "stare-23", level: 4, form: "stai", type: "neg", it: "Non stai in hotel.", ru: "Ты не в отеле." },
+    { id: "stare-24", level: 4, form: "sta", type: "neg", it: "Non sta in hotel.", ru: "Вы не в отеле." },
+
+    // ── Уровень 5 — новое: meglio ─────────────────────────────
+    { id: "stare-25", level: 5, form: "stai", type: "quest", it: "Stai meglio?", ru: "Ты лучше?" },
+    { id: "stare-26", level: 5, form: "sta", type: "quest", it: "Sta meglio?", ru: "Вы лучше?" },
+
+    // ── Уровень 6 — новое: male ───────────────────────────────
+    { id: "stare-27", level: 6, form: "stai", type: "quest", it: "Stai male?", ru: "Ты плохо?" },
+    { id: "stare-28", level: 6, form: "sta", type: "quest", it: "Sta male?", ru: "Вы плохо?" },
+  ],
+
+  volere: [
+    // ── Уровень 1 — новое: un caffè ───────────────────────────
+    { id: "volere-1", level: 1, form: "vorrei", type: "aff", it: "Vorrei un caffè.", ru: "Я хотел бы кофе." },
+    { id: "volere-2", level: 1, form: "vuoi", type: "quest", it: "Vuoi un caffè?", ru: "Ты хочешь кофе?" },
+    { id: "volere-3", level: 1, form: "vuole", type: "quest", it: "Vuole un caffè?", ru: "Вы хотите кофе?" },
+
+    // ── Уровень 2 — новое: una pizza ──────────────────────────
+    { id: "volere-4", level: 2, form: "vorrei", type: "aff", it: "Vorrei una pizza.", ru: "Я хотел бы пиццу." },
+    { id: "volere-5", level: 2, form: "vuoi", type: "quest", it: "Vuoi una pizza?", ru: "Ты хочешь пиццу?" },
+    { id: "volere-6", level: 2, form: "vuole", type: "quest", it: "Vuole una pizza?", ru: "Вы хотите пиццу?" },
+
+    // ── Уровень 3 — новое: l'acqua ────────────────────────────
+    { id: "volere-7", level: 3, form: "vorrei", type: "aff", it: "Vorrei l'acqua.", ru: "Я хотел бы воду." },
+    { id: "volere-8", level: 3, form: "vuoi", type: "quest", it: "Vuoi l'acqua?", ru: "Ты хочешь воду?" },
+    { id: "volere-9", level: 3, form: "vuole", type: "quest", it: "Vuole l'acqua?", ru: "Вы хотите воду?" },
+
+    // ── Уровень 4 — новое: il conto ───────────────────────────
+    { id: "volere-10", level: 4, form: "vorrei", type: "aff", it: "Vorrei il conto.", ru: "Я хотел бы счёт." },
+    { id: "volere-11", level: 4, form: "vuoi", type: "quest", it: "Vuoi il conto?", ru: "Ты хочешь счёт?" },
+    { id: "volere-12", level: 4, form: "vuole", type: "quest", it: "Vuole il conto?", ru: "Вы хотите счёт?" },
+
+    // ── Уровень 5 — новое: un tavolo ──────────────────────────
+    { id: "volere-13", level: 5, form: "vorrei", type: "aff", it: "Vorrei un tavolo.", ru: "Я хотел бы столик." },
+    { id: "volere-14", level: 5, form: "vuoi", type: "quest", it: "Vuoi un tavolo?", ru: "Ты хочешь столик?" },
+    { id: "volere-15", level: 5, form: "vuole", type: "quest", it: "Vuole un tavolo?", ru: "Вы хотите столик?" },
+
+    // ── Уровень 6 — новое: il menu ────────────────────────────
+    { id: "volere-16", level: 6, form: "vorrei", type: "aff", it: "Vorrei il menu.", ru: "Я хотел бы меню." },
+    { id: "volere-17", level: 6, form: "vuoi", type: "quest", it: "Vuoi il menu?", ru: "Ты хочешь меню?" },
+    { id: "volere-18", level: 6, form: "vuole", type: "quest", it: "Vuole il menu?", ru: "Вы хотите меню?" },
+
+    // ── Уровень 7 — новое: voglio ─────────────────────────────
+    { id: "volere-19", level: 7, form: "voglio", type: "aff", it: "Voglio un caffè.", ru: "Я хочу кофе." },
+    { id: "volere-20", level: 7, form: "voglio", type: "aff", it: "Voglio una pizza.", ru: "Я хочу пиццу." },
+    { id: "volere-21", level: 7, form: "voglio", type: "neg", it: "Non voglio l'acqua.", ru: "Я не хочу воду." },
+
+    // ── Уровень 8 — новое: pagare ─────────────────────────────
+    { id: "volere-22", level: 8, form: "vorrei", type: "aff", it: "Vorrei pagare.", ru: "Я хотел бы заплатить." },
+    { id: "volere-23", level: 8, form: "vuoi", type: "quest", it: "Vuoi pagare?", ru: "Ты хочешь заплатить?" },
+    { id: "volere-24", level: 8, form: "vuole", type: "quest", it: "Vuole pagare?", ru: "Вы хотите заплатить?" },
+    { id: "volere-25", level: 8, form: "voglio", type: "neg", it: "Non voglio pagare.", ru: "Я не хочу платить." },
+
+    // ── Уровень 9 — новое: aspettare ──────────────────────────
+    { id: "volere-26", level: 9, form: "vorrei", type: "aff", it: "Vorrei aspettare.", ru: "Я хотел бы подождать." },
+    { id: "volere-27", level: 9, form: "voglio", type: "neg", it: "Non voglio aspettare.", ru: "Я не хочу ждать." },
+    { id: "volere-28", level: 9, form: "vuole", type: "quest", it: "Vuole aspettare?", ru: "Вы хотите подождать?" },
+
+    // ── Уровень 10 — новое: provare ───────────────────────────
+    { id: "volere-29", level: 10, form: "vorrei", type: "aff", it: "Vorrei provare.", ru: "Я хотел бы попробовать." },
+    { id: "volere-30", level: 10, form: "vuoi", type: "quest", it: "Vuoi provare?", ru: "Ты хочешь попробовать?" },
+    { id: "volere-31", level: 10, form: "voglio", type: "neg", it: "Non voglio provare.", ru: "Я не хочу пробовать." },
+
+    // ── Уровень 11 — новое: caldo ─────────────────────────────
+    { id: "volere-32", level: 11, form: "vorrei", type: "aff", it: "Vorrei un caffè caldo.", ru: "Я хотел бы горячий кофе." },
+    { id: "volere-33", level: 11, form: "vuoi", type: "quest", it: "Vuoi un caffè caldo?", ru: "Ты хочешь горячий кофе?" },
+    { id: "volere-34", level: 11, form: "vuole", type: "quest", it: "Vuole un caffè caldo?", ru: "Вы хотите горячий кофе?" },
+
+    // ── Уровень 12 — новое: freddo ────────────────────────────
+    { id: "volere-35", level: 12, form: "vorrei", type: "aff", it: "Vorrei un caffè freddo.", ru: "Я хотел бы холодный кофе." },
+    { id: "volere-36", level: 12, form: "vuole", type: "quest", it: "Vuole un caffè freddo?", ru: "Вы хотите холодный кофе?" },
+    { id: "volere-37", level: 12, form: "voglio", type: "neg", it: "Non voglio un caffè freddo.", ru: "Я не хочу холодный кофе." },
+
+    // ── Уровень 13 — новое: un vino ───────────────────────────
+    { id: "volere-38", level: 13, form: "vorrei", type: "aff", it: "Vorrei un vino.", ru: "Я хотел бы вино." },
+    { id: "volere-39", level: 13, form: "vuoi", type: "quest", it: "Vuoi un vino?", ru: "Ты хочешь вино?" },
+    { id: "volere-40", level: 13, form: "vuole", type: "quest", it: "Vuole un vino?", ru: "Вы хотите вино?" },
+
+    // ── Уровень 14 — новое: rosso ─────────────────────────────
+    { id: "volere-41", level: 14, form: "vorrei", type: "aff", it: "Vorrei un vino rosso.", ru: "Я хотел бы красное вино." },
+    { id: "volere-42", level: 14, form: "vuole", type: "quest", it: "Vuole un vino rosso?", ru: "Вы хотите красное вино?" },
+    { id: "volere-43", level: 14, form: "voglio", type: "neg", it: "Non voglio un vino rosso.", ru: "Я не хочу красное вино." },
+
+    // ── Уровень 15 — новое: una macchina ──────────────────────
+    { id: "volere-44", level: 15, form: "vorrei", type: "aff", it: "Vorrei una macchina.", ru: "Я хотел бы машину." },
+    { id: "volere-45", level: 15, form: "vuoi", type: "quest", it: "Vuoi una macchina?", ru: "Ты хочешь машину?" },
+    { id: "volere-46", level: 15, form: "vuole", type: "quest", it: "Vuole una macchina?", ru: "Вы хотите машину?" },
+
+    // ── Уровень 16 — новое: rossa ─────────────────────────────
+    { id: "volere-47", level: 16, form: "vorrei", type: "aff", it: "Vorrei una macchina rossa.", ru: "Я хотел бы красную машину." },
+    { id: "volere-48", level: 16, form: "vuole", type: "quest", it: "Vuole una macchina rossa?", ru: "Вы хотите красную машину?" },
+    { id: "volere-49", level: 16, form: "voglio", type: "neg", it: "Non voglio una macchina rossa.", ru: "Я не хочу красную машину." },
+
+    // ── Уровень 17 — новое: blu ───────────────────────────────
+    { id: "volere-50", level: 17, form: "vorrei", type: "aff", it: "Vorrei una macchina blu.", ru: "Я хотел бы синюю машину." },
+    { id: "volere-51", level: 17, form: "vuoi", type: "quest", it: "Vuoi una macchina blu?", ru: "Ты хочешь синюю машину?" },
+    { id: "volere-52", level: 17, form: "vuole", type: "quest", it: "Vuole una macchina blu?", ru: "Вы хотите синюю машину?" },
+
+    // ── Уровень 18 — новое: grande ────────────────────────────
+    { id: "volere-53", level: 18, form: "vorrei", type: "aff", it: "Vorrei un tavolo grande.", ru: "Я хотел бы большой столик." },
+    { id: "volere-54", level: 18, form: "vorrei", type: "aff", it: "Vorrei una macchina grande.", ru: "Я хотел бы большую машину." },
+    { id: "volere-55", level: 18, form: "vuole", type: "quest", it: "Vuole un tavolo grande?", ru: "Вы хотите большой столик?" },
+
+    // ── Уровень 19 — новое: piccolo ───────────────────────────
+    { id: "volere-56", level: 19, form: "vorrei", type: "aff", it: "Vorrei un tavolo piccolo.", ru: "Я хотел бы маленький столик." },
+    { id: "volere-57", level: 19, form: "vuoi", type: "quest", it: "Vuoi un tavolo piccolo?", ru: "Ты хочешь маленький столик?" },
+    { id: "volere-58", level: 19, form: "voglio", type: "neg", it: "Non voglio un tavolo piccolo.", ru: "Я не хочу маленький столик." },
+
+    // ── Уровень 20 — новое: piccola ───────────────────────────
+    { id: "volere-59", level: 20, form: "vorrei", type: "aff", it: "Vorrei una macchina piccola.", ru: "Я хотел бы маленькую машину." },
+    { id: "volere-60", level: 20, form: "vuole", type: "quest", it: "Vuole una macchina piccola?", ru: "Вы хотите маленькую машину?" },
+    { id: "volere-61", level: 20, form: "voglio", type: "neg", it: "Non voglio una macchina piccola.", ru: "Я не хочу маленькую машину." },
+
+    // ── Уровень 21 — новое: buono ─────────────────────────────
+    { id: "volere-62", level: 21, form: "vorrei", type: "aff", it: "Vorrei un vino buono.", ru: "Я хотел бы хорошее вино." },
+    { id: "volere-63", level: 21, form: "vuoi", type: "quest", it: "Vuoi un vino buono?", ru: "Ты хочешь хорошее вино?" },
+    { id: "volere-64", level: 21, form: "vuole", type: "quest", it: "Vuole un vino buono?", ru: "Вы хотите хорошее вино?" },
+
+    // ── Уровень 22 — новое: buona ─────────────────────────────
+    { id: "volere-65", level: 22, form: "vorrei", type: "aff", it: "Vorrei una pizza buona.", ru: "Я хотел бы хорошую пиццу." },
+    { id: "volere-66", level: 22, form: "vuoi", type: "quest", it: "Vuoi una pizza buona?", ru: "Ты хочешь хорошую пиццу?" },
+    { id: "volere-67", level: 22, form: "vuole", type: "quest", it: "Vuole una pizza buona?", ru: "Вы хотите хорошую пиццу?" },
+
+    // ── Уровень 23 — новое: il giornale ───────────────────────
+    { id: "volere-68", level: 23, form: "vorrei", type: "aff", it: "Vorrei il giornale.", ru: "Я хотел бы газету." },
+    { id: "volere-69", level: 23, form: "vuoi", type: "quest", it: "Vuoi il giornale?", ru: "Ты хочешь газету?" },
+    { id: "volere-70", level: 23, form: "vuole", type: "quest", it: "Vuole il giornale?", ru: "Вы хотите газету?" },
+
+    // ── Уровень 24 — новое: un computer ───────────────────────
+    { id: "volere-71", level: 24, form: "vorrei", type: "aff", it: "Vorrei un computer.", ru: "Я хотел бы компьютер." },
+    { id: "volere-72", level: 24, form: "vuoi", type: "quest", it: "Vuoi un computer?", ru: "Ты хочешь компьютер?" },
+    { id: "volere-73", level: 24, form: "vuole", type: "quest", it: "Vuole un computer?", ru: "Вы хотите компьютер?" },
+
+    // ── Уровень 25 — новое: nuovo ─────────────────────────────
+    { id: "volere-74", level: 25, form: "vorrei", type: "aff", it: "Vorrei un computer nuovo.", ru: "Я хотел бы новый компьютер." },
+    { id: "volere-75", level: 25, form: "vuole", type: "quest", it: "Vuole un computer nuovo?", ru: "Вы хотите новый компьютер?" },
+    { id: "volere-76", level: 25, form: "voglio", type: "neg", it: "Non voglio un computer nuovo.", ru: "Я не хочу новый компьютер." },
+
+    // ── Уровень 26 — новое: nuova ─────────────────────────────
+    { id: "volere-77", level: 26, form: "vorrei", type: "aff", it: "Vorrei una macchina nuova.", ru: "Я хотел бы новую машину." },
+    { id: "volere-78", level: 26, form: "vuole", type: "quest", it: "Vuole una macchina nuova?", ru: "Вы хотите новую машину?" },
+    { id: "volere-79", level: 26, form: "voglio", type: "neg", it: "Non voglio una macchina nuova.", ru: "Я не хочу новую машину." },
+
+    // ── Уровень 27 — новое: per favore ────────────────────────
+    { id: "volere-80", level: 27, form: "vorrei", type: "aff", it: "Vorrei un caffè, per favore.", ru: "Я хотел бы кофе, пожалуйста." },
+    { id: "volere-81", level: 27, form: "vorrei", type: "aff", it: "Vorrei il conto, per favore.", ru: "Я хотел бы счёт, пожалуйста." },
+    { id: "volere-82", level: 27, form: "vorrei", type: "aff", it: "Vorrei il menu, per favore.", ru: "Я хотел бы меню, пожалуйста." },
+
+    // ── Уровень 28 — новое: mi scusi ──────────────────────────
+    { id: "volere-83", level: 28, form: "vorrei", type: "aff", it: "Mi scusi, vorrei il conto.", ru: "Извините, я хотел бы счёт." },
+    { id: "volere-84", level: 28, form: "vorrei", type: "aff", it: "Mi scusi, vorrei un caffè.", ru: "Извините, я хотел бы кофе." },
+    { id: "volere-85", level: 28, form: "vorrei", type: "aff", it: "Mi scusi, vorrei il menu.", ru: "Извините, я хотел бы меню." },
+
+    // ── Уровень 29 — новое: grazie ────────────────────────────
+    { id: "volere-86", level: 29, form: "vorrei", type: "aff", it: "Vorrei un vino, grazie.", ru: "Я хотел бы вино, спасибо." },
+    { id: "volere-87", level: 29, form: "vorrei", type: "aff", it: "Vorrei una pizza, grazie.", ru: "Я хотел бы пиццу, спасибо." },
+    { id: "volere-88", level: 29, form: "vorrei", type: "aff", it: "Vorrei l'acqua, grazie.", ru: "Я хотел бы воду, спасибо." },
+
+    // ── Уровень 30 — новое: prego ─────────────────────────────
+    { id: "volere-89", level: 30, form: "vuole", type: "quest", it: "Prego, vuole un caffè?", ru: "Прошу, Вы хотите кофе?" },
+    { id: "volere-90", level: 30, form: "vuole", type: "quest", it: "Prego, vuole il menu?", ru: "Прошу, Вы хотите меню?" },
+    { id: "volere-91", level: 30, form: "vuole", type: "quest", it: "Prego, vuole un vino?", ru: "Прошу, Вы хотите вино?" },
+
+    // ── Уровень 31 — новое: posso ─────────────────────────────
+    { id: "volere-92", level: 31, form: "posso", type: "quest", it: "Posso pagare?", ru: "Я могу заплатить?" },
+    { id: "volere-93", level: 31, form: "posso", type: "quest", it: "Posso aspettare?", ru: "Я могу подождать?" },
+    { id: "volere-94", level: 31, form: "posso", type: "quest", it: "Posso provare?", ru: "Я могу попробовать?" },
+
+    // ── Уровень 32 — новое: avere ─────────────────────────────
+    { id: "volere-95", level: 32, form: "posso", type: "quest", it: "Posso avere un caffè?", ru: "Можно мне кофе?" },
+    { id: "volere-96", level: 32, form: "posso", type: "quest", it: "Posso avere il conto?", ru: "Можно мне счёт?" },
+    { id: "volere-97", level: 32, form: "posso", type: "quest", it: "Posso avere il menu?", ru: "Можно мне меню?" },
+
+    // ── Уровень 33 — новое: ho bisogno ────────────────────────
+    { id: "volere-98", level: 33, form: "ho bisogno", type: "aff", it: "Ho bisogno di un computer.", ru: "Мне нужен компьютер." },
+    { id: "volere-99", level: 33, form: "ho bisogno", type: "aff", it: "Ho bisogno di una macchina.", ru: "Мне нужна машина." },
+    { id: "volere-100", level: 33, form: "ho bisogno", type: "aff", it: "Ho bisogno di un tavolo.", ru: "Мне нужен столик." },
+  ],
+
+  potere: [
+    // ── Уровень 1 — новое: entrare ────────────────────────────
+    { id: "potere-1", level: 1, form: "posso", type: "aff", it: "Posso entrare.", ru: "Я могу войти." },
+    { id: "potere-2", level: 1, form: "puoi", type: "aff", it: "Puoi entrare.", ru: "Ты можешь войти." },
+    { id: "potere-3", level: 1, form: "può", type: "aff", it: "Può entrare.", ru: "Вы можете войти." },
+    { id: "potere-4", level: 1, form: "posso", type: "neg", it: "Non posso entrare.", ru: "Я не могу войти." },
+    { id: "potere-5", level: 1, form: "puoi", type: "neg", it: "Non puoi entrare.", ru: "Ты не можешь войти." },
+    { id: "potere-6", level: 1, form: "può", type: "neg", it: "Non può entrare.", ru: "Вы не можете войти." },
+
+    // ── Уровень 2 — новое: pagare ─────────────────────────────
+    { id: "potere-7", level: 2, form: "posso", type: "aff", it: "Posso pagare.", ru: "Я могу заплатить." },
+    { id: "potere-8", level: 2, form: "puoi", type: "aff", it: "Puoi pagare.", ru: "Ты можешь заплатить." },
+    { id: "potere-9", level: 2, form: "può", type: "aff", it: "Può pagare.", ru: "Вы можете заплатить." },
+    { id: "potere-10", level: 2, form: "posso", type: "neg", it: "Non posso pagare.", ru: "Я не могу заплатить." },
+    { id: "potere-11", level: 2, form: "puoi", type: "neg", it: "Non puoi pagare.", ru: "Ты не можешь заплатить." },
+    { id: "potere-12", level: 2, form: "può", type: "neg", it: "Non può pagare.", ru: "Вы не можете заплатить." },
+
+    // ── Уровень 3 — новое: aspettare ──────────────────────────
+    { id: "potere-13", level: 3, form: "posso", type: "aff", it: "Posso aspettare.", ru: "Я могу подождать." },
+    { id: "potere-14", level: 3, form: "puoi", type: "aff", it: "Puoi aspettare.", ru: "Ты можешь подождать." },
+    { id: "potere-15", level: 3, form: "può", type: "aff", it: "Può aspettare.", ru: "Вы можете подождать." },
+    { id: "potere-16", level: 3, form: "posso", type: "neg", it: "Non posso aspettare.", ru: "Я не могу подождать." },
+    { id: "potere-17", level: 3, form: "puoi", type: "neg", it: "Non puoi aspettare.", ru: "Ты не можешь подождать." },
+    { id: "potere-18", level: 3, form: "può", type: "neg", it: "Non può aspettare.", ru: "Вы не можете подождать." },
+
+    // ── Уровень 4 — новое: aiutare ────────────────────────────
+    { id: "potere-19", level: 4, form: "posso", type: "aff", it: "Posso aiutare.", ru: "Я могу помочь." },
+    { id: "potere-20", level: 4, form: "puoi", type: "aff", it: "Puoi aiutare.", ru: "Ты можешь помочь." },
+    { id: "potere-21", level: 4, form: "può", type: "aff", it: "Può aiutare.", ru: "Вы можете помочь." },
+    { id: "potere-22", level: 4, form: "posso", type: "neg", it: "Non posso aiutare.", ru: "Я не могу помочь." },
+    { id: "potere-23", level: 4, form: "puoi", type: "neg", it: "Non puoi aiutare.", ru: "Ты не можешь помочь." },
+    { id: "potere-24", level: 4, form: "può", type: "neg", it: "Non può aiutare.", ru: "Вы не можете помочь." },
+
+    // ── Уровень 5 — новое: fumare ─────────────────────────────
+    { id: "potere-25", level: 5, form: "posso", type: "quest", it: "Posso fumare?", ru: "Я могу курить?" },
+    { id: "potere-26", level: 5, form: "puoi", type: "quest", it: "Puoi fumare?", ru: "Ты можешь курить?" },
+    { id: "potere-27", level: 5, form: "può", type: "quest", it: "Può fumare?", ru: "Вы можете курить?" },
+
+    // ── Уровень 6 — новое: provare ────────────────────────────
+    { id: "potere-28", level: 6, form: "posso", type: "quest", it: "Posso provare?", ru: "Я могу попробовать?" },
+    { id: "potere-29", level: 6, form: "puoi", type: "quest", it: "Puoi provare?", ru: "Ты можешь попробовать?" },
+    { id: "potere-30", level: 6, form: "può", type: "quest", it: "Può provare?", ru: "Вы можете попробовать?" },
+  ],
+
+  servire: [
+    // ── Уровень 1 — новое: un taxi ────────────────────────────
+    { id: "servire-1", level: 1, form: "mi serve", type: "aff", it: "Mi serve un taxi.", ru: "Мне нужно такси." },
+    { id: "servire-2", level: 1, form: "ti serve", type: "aff", it: "Ti serve un taxi.", ru: "Тебе нужно такси." },
+    { id: "servire-3", level: 1, form: "Le serve", type: "aff", it: "Le serve un taxi.", ru: "Вам нужно такси." },
+    { id: "servire-4", level: 1, form: "mi serve", type: "neg", it: "Non mi serve un taxi.", ru: "Мне не нужно такси." },
+    { id: "servire-5", level: 1, form: "ti serve", type: "neg", it: "Non ti serve un taxi.", ru: "Тебе не нужно такси." },
+    { id: "servire-6", level: 1, form: "Le serve", type: "neg", it: "Non Le serve un taxi.", ru: "Вам не нужно такси." },
+
+    // ── Уровень 2 — новое: una camera ─────────────────────────
+    { id: "servire-7", level: 2, form: "mi serve", type: "aff", it: "Mi serve una camera.", ru: "Мне нужна комната." },
+    { id: "servire-8", level: 2, form: "ti serve", type: "aff", it: "Ti serve una camera.", ru: "Тебе нужна комната." },
+    { id: "servire-9", level: 2, form: "Le serve", type: "aff", it: "Le serve una camera.", ru: "Вам нужна комната." },
+    { id: "servire-10", level: 2, form: "mi serve", type: "neg", it: "Non mi serve una camera.", ru: "Мне не нужна комната." },
+    { id: "servire-11", level: 2, form: "ti serve", type: "neg", it: "Non ti serve una camera.", ru: "Тебе не нужна комната." },
+    { id: "servire-12", level: 2, form: "Le serve", type: "neg", it: "Non Le serve una camera.", ru: "Вам не нужна комната." },
+
+    // ── Уровень 3 — новое: il conto ───────────────────────────
+    { id: "servire-13", level: 3, form: "mi serve", type: "aff", it: "Mi serve il conto.", ru: "Мне нужен счёт." },
+    { id: "servire-14", level: 3, form: "ti serve", type: "aff", it: "Ti serve il conto.", ru: "Тебе нужен счёт." },
+    { id: "servire-15", level: 3, form: "Le serve", type: "aff", it: "Le serve il conto.", ru: "Вам нужен счёт." },
+    { id: "servire-16", level: 3, form: "mi serve", type: "neg", it: "Non mi serve il conto.", ru: "Мне не нужен счёт." },
+    { id: "servire-17", level: 3, form: "ti serve", type: "neg", it: "Non ti serve il conto.", ru: "Тебе не нужен счёт." },
+    { id: "servire-18", level: 3, form: "Le serve", type: "neg", it: "Non Le serve il conto.", ru: "Вам не нужен счёт." },
+
+    // ── Уровень 4 — новое: l'acqua ────────────────────────────
+    { id: "servire-19", level: 4, form: "mi serve", type: "aff", it: "Mi serve l'acqua.", ru: "Мне нужна вода." },
+    { id: "servire-20", level: 4, form: "ti serve", type: "aff", it: "Ti serve l'acqua.", ru: "Тебе нужна вода." },
+    { id: "servire-21", level: 4, form: "Le serve", type: "aff", it: "Le serve l'acqua.", ru: "Вам нужна вода." },
+    { id: "servire-22", level: 4, form: "mi serve", type: "neg", it: "Non mi serve l'acqua.", ru: "Мне не нужна вода." },
+    { id: "servire-23", level: 4, form: "ti serve", type: "neg", it: "Non ti serve l'acqua.", ru: "Тебе не нужна вода." },
+    { id: "servire-24", level: 4, form: "Le serve", type: "neg", it: "Non Le serve l'acqua.", ru: "Вам не нужна вода." },
+
+    // ── Уровень 5 — новое: un biglietto ───────────────────────
+    { id: "servire-25", level: 5, form: "mi serve", type: "quest", it: "Mi serve un biglietto?", ru: "Мне нужен билет?" },
+    { id: "servire-26", level: 5, form: "ti serve", type: "quest", it: "Ti serve un biglietto?", ru: "Тебе нужен билет?" },
+    { id: "servire-27", level: 5, form: "Le serve", type: "quest", it: "Le serve un biglietto?", ru: "Вам нужен билет?" },
+
+    // ── Уровень 6 — новое: aiuto ──────────────────────────────
+    { id: "servire-28", level: 6, form: "mi serve", type: "quest", it: "Mi serve aiuto?", ru: "Мне нужна помощь?" },
+    { id: "servire-29", level: 6, form: "ti serve", type: "quest", it: "Ti serve aiuto?", ru: "Тебе нужна помощь?" },
+    { id: "servire-30", level: 6, form: "Le serve", type: "quest", it: "Le serve aiuto?", ru: "Вам нужна помощь?" },
+  ],
+
+  andare: [
+    // ── Уровень 1 — новое: a Roma ─────────────────────────────
+    { id: "andare-1", level: 1, form: "vado", type: "aff", it: "Vado a Roma.", ru: "Я еду в Рим." },
+    { id: "andare-2", level: 1, form: "vai", type: "aff", it: "Vai a Roma.", ru: "Ты едешь в Рим." },
+    { id: "andare-3", level: 1, form: "va", type: "aff", it: "Va a Roma.", ru: "Вы едете в Рим." },
+    { id: "andare-4", level: 1, form: "vado", type: "neg", it: "Non vado a Roma.", ru: "Я не еду в Рим." },
+    { id: "andare-5", level: 1, form: "vai", type: "neg", it: "Non vai a Roma.", ru: "Ты не едешь в Рим." },
+    { id: "andare-6", level: 1, form: "va", type: "neg", it: "Non va a Roma.", ru: "Вы не едете в Рим." },
+
+    // ── Уровень 2 — новое: a casa ─────────────────────────────
+    { id: "andare-7", level: 2, form: "vado", type: "aff", it: "Vado a casa.", ru: "Я еду домой." },
+    { id: "andare-8", level: 2, form: "vai", type: "aff", it: "Vai a casa.", ru: "Ты едешь домой." },
+    { id: "andare-9", level: 2, form: "va", type: "aff", it: "Va a casa.", ru: "Вы едете домой." },
+    { id: "andare-10", level: 2, form: "vado", type: "neg", it: "Non vado a casa.", ru: "Я не еду домой." },
+    { id: "andare-11", level: 2, form: "vai", type: "neg", it: "Non vai a casa.", ru: "Ты не едешь домой." },
+    { id: "andare-12", level: 2, form: "va", type: "neg", it: "Non va a casa.", ru: "Вы не едете домой." },
+
+    // ── Уровень 3 — новое: in hotel ───────────────────────────
+    { id: "andare-13", level: 3, form: "vado", type: "aff", it: "Vado in hotel.", ru: "Я еду в отель." },
+    { id: "andare-14", level: 3, form: "vai", type: "aff", it: "Vai in hotel.", ru: "Ты едешь в отель." },
+    { id: "andare-15", level: 3, form: "va", type: "aff", it: "Va in hotel.", ru: "Вы едете в отель." },
+    { id: "andare-16", level: 3, form: "vado", type: "neg", it: "Non vado in hotel.", ru: "Я не еду в отель." },
+    { id: "andare-17", level: 3, form: "vai", type: "neg", it: "Non vai in hotel.", ru: "Ты не едешь в отель." },
+    { id: "andare-18", level: 3, form: "va", type: "neg", it: "Non va in hotel.", ru: "Вы не едете в отель." },
+
+    // ── Уровень 4 — новое: alla stazione ──────────────────────
+    { id: "andare-19", level: 4, form: "vado", type: "aff", it: "Vado alla stazione.", ru: "Я еду на вокзал." },
+    { id: "andare-20", level: 4, form: "vai", type: "aff", it: "Vai alla stazione.", ru: "Ты едешь на вокзал." },
+    { id: "andare-21", level: 4, form: "va", type: "aff", it: "Va alla stazione.", ru: "Вы едете на вокзал." },
+    { id: "andare-22", level: 4, form: "vado", type: "neg", it: "Non vado alla stazione.", ru: "Я не еду на вокзал." },
+    { id: "andare-23", level: 4, form: "vai", type: "neg", it: "Non vai alla stazione.", ru: "Ты не едешь на вокзал." },
+    { id: "andare-24", level: 4, form: "va", type: "neg", it: "Non va alla stazione.", ru: "Вы не едете на вокзал." },
+
+    // ── Уровень 5 — новое: al mare ────────────────────────────
+    { id: "andare-25", level: 5, form: "vai", type: "quest", it: "Vai al mare?", ru: "Ты едешь на море?" },
+    { id: "andare-26", level: 5, form: "va", type: "quest", it: "Va al mare?", ru: "Вы едете на море?" },
+
+    // ── Уровень 6 — новое: in centro ──────────────────────────
+    { id: "andare-27", level: 6, form: "vai", type: "quest", it: "Vai in centro?", ru: "Ты едешь в центр?" },
+    { id: "andare-28", level: 6, form: "va", type: "quest", it: "Va in centro?", ru: "Вы едете в центр?" },
+  ],
+
+  venire: [
+    // ── Уровень 1 — новое: qui ────────────────────────────────
+    { id: "venire-1", level: 1, form: "vengo", type: "aff", it: "Vengo qui.", ru: "Я приду сюда." },
+    { id: "venire-2", level: 1, form: "vieni", type: "aff", it: "Vieni qui.", ru: "Ты придёшь сюда." },
+    { id: "venire-3", level: 1, form: "viene", type: "aff", it: "Viene qui.", ru: "Вы придёте сюда." },
+    { id: "venire-4", level: 1, form: "vengo", type: "neg", it: "Non vengo qui.", ru: "Я не приду сюда." },
+    { id: "venire-5", level: 1, form: "vieni", type: "neg", it: "Non vieni qui.", ru: "Ты не придёшь сюда." },
+    { id: "venire-6", level: 1, form: "viene", type: "neg", it: "Non viene qui.", ru: "Вы не придёте сюда." },
+
+    // ── Уровень 2 — новое: con me ─────────────────────────────
+    { id: "venire-7", level: 2, form: "vengo", type: "aff", it: "Vengo con me.", ru: "Я приду со мной." },
+    { id: "venire-8", level: 2, form: "vieni", type: "aff", it: "Vieni con me.", ru: "Ты придёшь со мной." },
+    { id: "venire-9", level: 2, form: "viene", type: "aff", it: "Viene con me.", ru: "Вы придёте со мной." },
+    { id: "venire-10", level: 2, form: "vengo", type: "neg", it: "Non vengo con me.", ru: "Я не приду со мной." },
+    { id: "venire-11", level: 2, form: "vieni", type: "neg", it: "Non vieni con me.", ru: "Ты не придёшь со мной." },
+    { id: "venire-12", level: 2, form: "viene", type: "neg", it: "Non viene con me.", ru: "Вы не придёте со мной." },
+
+    // ── Уровень 3 — новое: a casa ─────────────────────────────
+    { id: "venire-13", level: 3, form: "vengo", type: "aff", it: "Vengo a casa.", ru: "Я приду домой." },
+    { id: "venire-14", level: 3, form: "vieni", type: "aff", it: "Vieni a casa.", ru: "Ты придёшь домой." },
+    { id: "venire-15", level: 3, form: "viene", type: "aff", it: "Viene a casa.", ru: "Вы придёте домой." },
+    { id: "venire-16", level: 3, form: "vengo", type: "neg", it: "Non vengo a casa.", ru: "Я не приду домой." },
+    { id: "venire-17", level: 3, form: "vieni", type: "neg", it: "Non vieni a casa.", ru: "Ты не придёшь домой." },
+    { id: "venire-18", level: 3, form: "viene", type: "neg", it: "Non viene a casa.", ru: "Вы не придёте домой." },
+
+    // ── Уровень 4 — новое: in hotel ───────────────────────────
+    { id: "venire-19", level: 4, form: "vengo", type: "aff", it: "Vengo in hotel.", ru: "Я приду в отель." },
+    { id: "venire-20", level: 4, form: "vieni", type: "aff", it: "Vieni in hotel.", ru: "Ты придёшь в отель." },
+    { id: "venire-21", level: 4, form: "viene", type: "aff", it: "Viene in hotel.", ru: "Вы придёте в отель." },
+    { id: "venire-22", level: 4, form: "vengo", type: "neg", it: "Non vengo in hotel.", ru: "Я не приду в отель." },
+    { id: "venire-23", level: 4, form: "vieni", type: "neg", it: "Non vieni in hotel.", ru: "Ты не придёшь в отель." },
+    { id: "venire-24", level: 4, form: "viene", type: "neg", it: "Non viene in hotel.", ru: "Вы не придёте в отель." },
+
+    // ── Уровень 5 — новое: domani ─────────────────────────────
+    { id: "venire-25", level: 5, form: "vieni", type: "quest", it: "Vieni domani?", ru: "Ты придёшь завтра?" },
+    { id: "venire-26", level: 5, form: "viene", type: "quest", it: "Viene domani?", ru: "Вы придёте завтра?" },
+
+    // ── Уровень 6 — новое: al bar ─────────────────────────────
+    { id: "venire-27", level: 6, form: "vieni", type: "quest", it: "Vieni al bar?", ru: "Ты придёшь в бар?" },
+    { id: "venire-28", level: 6, form: "viene", type: "quest", it: "Viene al bar?", ru: "Вы придёте в бар?" },
+  ],
+
+  sapere: [
+    // ── Уровень 1 — новое: tutto ──────────────────────────────
+    { id: "sapere-1", level: 1, form: "so", type: "aff", it: "So tutto.", ru: "Я знаю всё." },
+    { id: "sapere-2", level: 1, form: "sai", type: "aff", it: "Sai tutto.", ru: "Ты знаешь всё." },
+    { id: "sapere-3", level: 1, form: "sa", type: "aff", it: "Sa tutto.", ru: "Вы знаете всё." },
+    { id: "sapere-4", level: 1, form: "so", type: "neg", it: "Non so tutto.", ru: "Я не знаю всё." },
+    { id: "sapere-5", level: 1, form: "sai", type: "neg", it: "Non sai tutto.", ru: "Ты не знаешь всё." },
+    { id: "sapere-6", level: 1, form: "sa", type: "neg", it: "Non sa tutto.", ru: "Вы не знаете всё." },
+
+    // ── Уровень 2 — новое: il prezzo ──────────────────────────
+    { id: "sapere-7", level: 2, form: "so", type: "aff", it: "So il prezzo.", ru: "Я знаю цену." },
+    { id: "sapere-8", level: 2, form: "sai", type: "aff", it: "Sai il prezzo.", ru: "Ты знаешь цену." },
+    { id: "sapere-9", level: 2, form: "sa", type: "aff", it: "Sa il prezzo.", ru: "Вы знаете цену." },
+    { id: "sapere-10", level: 2, form: "so", type: "neg", it: "Non so il prezzo.", ru: "Я не знаю цену." },
+    { id: "sapere-11", level: 2, form: "sai", type: "neg", it: "Non sai il prezzo.", ru: "Ты не знаешь цену." },
+    { id: "sapere-12", level: 2, form: "sa", type: "neg", it: "Non sa il prezzo.", ru: "Вы не знаете цену." },
+
+    // ── Уровень 3 — новое: l'indirizzo ────────────────────────
+    { id: "sapere-13", level: 3, form: "so", type: "aff", it: "So l'indirizzo.", ru: "Я знаю адрес." },
+    { id: "sapere-14", level: 3, form: "sai", type: "aff", it: "Sai l'indirizzo.", ru: "Ты знаешь адрес." },
+    { id: "sapere-15", level: 3, form: "sa", type: "aff", it: "Sa l'indirizzo.", ru: "Вы знаете адрес." },
+    { id: "sapere-16", level: 3, form: "so", type: "neg", it: "Non so l'indirizzo.", ru: "Я не знаю адрес." },
+    { id: "sapere-17", level: 3, form: "sai", type: "neg", it: "Non sai l'indirizzo.", ru: "Ты не знаешь адрес." },
+    { id: "sapere-18", level: 3, form: "sa", type: "neg", it: "Non sa l'indirizzo.", ru: "Вы не знаете адрес." },
+
+    // ── Уровень 4 — новое: l'italiano ─────────────────────────
+    { id: "sapere-19", level: 4, form: "so", type: "aff", it: "So l'italiano.", ru: "Я знаю итальянский." },
+    { id: "sapere-20", level: 4, form: "sai", type: "aff", it: "Sai l'italiano.", ru: "Ты знаешь итальянский." },
+    { id: "sapere-21", level: 4, form: "sa", type: "aff", it: "Sa l'italiano.", ru: "Вы знаете итальянский." },
+    { id: "sapere-22", level: 4, form: "so", type: "neg", it: "Non so l'italiano.", ru: "Я не знаю итальянский." },
+    { id: "sapere-23", level: 4, form: "sai", type: "neg", it: "Non sai l'italiano.", ru: "Ты не знаешь итальянский." },
+    { id: "sapere-24", level: 4, form: "sa", type: "neg", it: "Non sa l'italiano.", ru: "Вы не знаете итальянский." },
+
+    // ── Уровень 5 — новое: dov'è ──────────────────────────────
+    { id: "sapere-25", level: 5, form: "sai", type: "quest", it: "Sai dov'è?", ru: "Ты знаешь где это?" },
+    { id: "sapere-26", level: 5, form: "sa", type: "quest", it: "Sa dov'è?", ru: "Вы знаете где это?" },
+
+    // ── Уровень 6 — новое: il nome ────────────────────────────
+    { id: "sapere-27", level: 6, form: "sai", type: "quest", it: "Sai il nome?", ru: "Ты знаешь имя?" },
+    { id: "sapere-28", level: 6, form: "sa", type: "quest", it: "Sa il nome?", ru: "Вы знаете имя?" },
+  ],
+
+  capire: [
+    // ── Уровень 1 — новое: tutto ──────────────────────────────
+    { id: "capire-1", level: 1, form: "capisco", type: "aff", it: "Capisco tutto.", ru: "Я понимаю всё." },
+    { id: "capire-2", level: 1, form: "capisci", type: "aff", it: "Capisci tutto.", ru: "Ты понимаешь всё." },
+    { id: "capire-3", level: 1, form: "capisce", type: "aff", it: "Capisce tutto.", ru: "Вы понимаете всё." },
+    { id: "capire-4", level: 1, form: "capisco", type: "neg", it: "Non capisco tutto.", ru: "Я не понимаю всё." },
+    { id: "capire-5", level: 1, form: "capisci", type: "neg", it: "Non capisci tutto.", ru: "Ты не понимаешь всё." },
+    { id: "capire-6", level: 1, form: "capisce", type: "neg", it: "Non capisce tutto.", ru: "Вы не понимаете всё." },
+
+    // ── Уровень 2 — новое: l'italiano ─────────────────────────
+    { id: "capire-7", level: 2, form: "capisco", type: "aff", it: "Capisco l'italiano.", ru: "Я понимаю итальянский." },
+    { id: "capire-8", level: 2, form: "capisci", type: "aff", it: "Capisci l'italiano.", ru: "Ты понимаешь итальянский." },
+    { id: "capire-9", level: 2, form: "capisce", type: "aff", it: "Capisce l'italiano.", ru: "Вы понимаете итальянский." },
+    { id: "capire-10", level: 2, form: "capisco", type: "neg", it: "Non capisco l'italiano.", ru: "Я не понимаю итальянский." },
+    { id: "capire-11", level: 2, form: "capisci", type: "neg", it: "Non capisci l'italiano.", ru: "Ты не понимаешь итальянский." },
+    { id: "capire-12", level: 2, form: "capisce", type: "neg", it: "Non capisce l'italiano.", ru: "Вы не понимаете итальянский." },
+
+    // ── Уровень 3 — новое: il problema ────────────────────────
+    { id: "capire-13", level: 3, form: "capisco", type: "aff", it: "Capisco il problema.", ru: "Я понимаю проблему." },
+    { id: "capire-14", level: 3, form: "capisci", type: "aff", it: "Capisci il problema.", ru: "Ты понимаешь проблему." },
+    { id: "capire-15", level: 3, form: "capisce", type: "aff", it: "Capisce il problema.", ru: "Вы понимаете проблему." },
+    { id: "capire-16", level: 3, form: "capisco", type: "neg", it: "Non capisco il problema.", ru: "Я не понимаю проблему." },
+    { id: "capire-17", level: 3, form: "capisci", type: "neg", it: "Non capisci il problema.", ru: "Ты не понимаешь проблему." },
+    { id: "capire-18", level: 3, form: "capisce", type: "neg", it: "Non capisce il problema.", ru: "Вы не понимаете проблему." },
+
+    // ── Уровень 4 — новое: la domanda ─────────────────────────
+    { id: "capire-19", level: 4, form: "capisco", type: "aff", it: "Capisco la domanda.", ru: "Я понимаю вопрос." },
+    { id: "capire-20", level: 4, form: "capisci", type: "aff", it: "Capisci la domanda.", ru: "Ты понимаешь вопрос." },
+    { id: "capire-21", level: 4, form: "capisce", type: "aff", it: "Capisce la domanda.", ru: "Вы понимаете вопрос." },
+    { id: "capire-22", level: 4, form: "capisco", type: "neg", it: "Non capisco la domanda.", ru: "Я не понимаю вопрос." },
+    { id: "capire-23", level: 4, form: "capisci", type: "neg", it: "Non capisci la domanda.", ru: "Ты не понимаешь вопрос." },
+    { id: "capire-24", level: 4, form: "capisce", type: "neg", it: "Non capisce la domanda.", ru: "Вы не понимаете вопрос." },
+
+    // ── Уровень 5 — новое: il russo ───────────────────────────
+    { id: "capire-25", level: 5, form: "capisci", type: "quest", it: "Capisci il russo?", ru: "Ты понимаешь русский?" },
+    { id: "capire-26", level: 5, form: "capisce", type: "quest", it: "Capisce il russo?", ru: "Вы понимаете русский?" },
+
+    // ── Уровень 6 — новое: la risposta ────────────────────────
+    { id: "capire-27", level: 6, form: "capisci", type: "quest", it: "Capisci la risposta?", ru: "Ты понимаешь ответ?" },
+    { id: "capire-28", level: 6, form: "capisce", type: "quest", it: "Capisce la risposta?", ru: "Вы понимаете ответ?" },
+  ],
+
+  parlare: [
+    // ── Уровень 1 — новое: italiano ───────────────────────────
+    { id: "parlare-1", level: 1, form: "parlo", type: "aff", it: "Parlo italiano.", ru: "Я говорю по-итальянски." },
+    { id: "parlare-2", level: 1, form: "parli", type: "aff", it: "Parli italiano.", ru: "Ты говоришь по-итальянски." },
+    { id: "parlare-3", level: 1, form: "parla", type: "aff", it: "Parla italiano.", ru: "Вы говорите по-итальянски." },
+    { id: "parlare-4", level: 1, form: "parlo", type: "neg", it: "Non parlo italiano.", ru: "Я не говорю по-итальянски." },
+    { id: "parlare-5", level: 1, form: "parli", type: "neg", it: "Non parli italiano.", ru: "Ты не говоришь по-итальянски." },
+    { id: "parlare-6", level: 1, form: "parla", type: "neg", it: "Non parla italiano.", ru: "Вы не говорите по-итальянски." },
+
+    // ── Уровень 2 — новое: inglese ────────────────────────────
+    { id: "parlare-7", level: 2, form: "parlo", type: "aff", it: "Parlo inglese.", ru: "Я говорю по-английски." },
+    { id: "parlare-8", level: 2, form: "parli", type: "aff", it: "Parli inglese.", ru: "Ты говоришь по-английски." },
+    { id: "parlare-9", level: 2, form: "parla", type: "aff", it: "Parla inglese.", ru: "Вы говорите по-английски." },
+    { id: "parlare-10", level: 2, form: "parlo", type: "neg", it: "Non parlo inglese.", ru: "Я не говорю по-английски." },
+    { id: "parlare-11", level: 2, form: "parli", type: "neg", it: "Non parli inglese.", ru: "Ты не говоришь по-английски." },
+    { id: "parlare-12", level: 2, form: "parla", type: "neg", it: "Non parla inglese.", ru: "Вы не говорите по-английски." },
+
+    // ── Уровень 3 — новое: russo ──────────────────────────────
+    { id: "parlare-13", level: 3, form: "parlo", type: "aff", it: "Parlo russo.", ru: "Я говорю по-русски." },
+    { id: "parlare-14", level: 3, form: "parli", type: "aff", it: "Parli russo.", ru: "Ты говоришь по-русски." },
+    { id: "parlare-15", level: 3, form: "parla", type: "aff", it: "Parla russo.", ru: "Вы говорите по-русски." },
+    { id: "parlare-16", level: 3, form: "parlo", type: "neg", it: "Non parlo russo.", ru: "Я не говорю по-русски." },
+    { id: "parlare-17", level: 3, form: "parli", type: "neg", it: "Non parli russo.", ru: "Ты не говоришь по-русски." },
+    { id: "parlare-18", level: 3, form: "parla", type: "neg", it: "Non parla russo.", ru: "Вы не говорите по-русски." },
+
+    // ── Уровень 4 — новое: con lui ────────────────────────────
+    { id: "parlare-19", level: 4, form: "parlo", type: "aff", it: "Parlo con lui.", ru: "Я говорю с ним." },
+    { id: "parlare-20", level: 4, form: "parli", type: "aff", it: "Parli con lui.", ru: "Ты говоришь с ним." },
+    { id: "parlare-21", level: 4, form: "parla", type: "aff", it: "Parla con lui.", ru: "Вы говорите с ним." },
+    { id: "parlare-22", level: 4, form: "parlo", type: "neg", it: "Non parlo con lui.", ru: "Я не говорю с ним." },
+    { id: "parlare-23", level: 4, form: "parli", type: "neg", it: "Non parli con lui.", ru: "Ты не говоришь с ним." },
+    { id: "parlare-24", level: 4, form: "parla", type: "neg", it: "Non parla con lui.", ru: "Вы не говорите с ним." },
+
+    // ── Уровень 5 — новое: tedesco ────────────────────────────
+    { id: "parlare-25", level: 5, form: "parli", type: "quest", it: "Parli tedesco?", ru: "Ты говоришь по-немецки?" },
+    { id: "parlare-26", level: 5, form: "parla", type: "quest", it: "Parla tedesco?", ru: "Вы говорите по-немецки?" },
+
+    // ── Уровень 6 — новое: spagnolo ───────────────────────────
+    { id: "parlare-27", level: 6, form: "parli", type: "quest", it: "Parli spagnolo?", ru: "Ты говоришь по-испански?" },
+    { id: "parlare-28", level: 6, form: "parla", type: "quest", it: "Parla spagnolo?", ru: "Вы говорите по-испански?" },
+  ],
+
+  vedere: [
+    // ── Уровень 1 — новое: il treno ───────────────────────────
+    { id: "vedere-1", level: 1, form: "vedo", type: "aff", it: "Vedo il treno.", ru: "Я вижу поезд." },
+    { id: "vedere-2", level: 1, form: "vedi", type: "aff", it: "Vedi il treno.", ru: "Ты видишь поезд." },
+    { id: "vedere-3", level: 1, form: "vede", type: "aff", it: "Vede il treno.", ru: "Вы видите поезд." },
+    { id: "vedere-4", level: 1, form: "vedo", type: "neg", it: "Non vedo il treno.", ru: "Я не вижу поезд." },
+    { id: "vedere-5", level: 1, form: "vedi", type: "neg", it: "Non vedi il treno.", ru: "Ты не видишь поезд." },
+    { id: "vedere-6", level: 1, form: "vede", type: "neg", it: "Non vede il treno.", ru: "Вы не видите поезд." },
+
+    // ── Уровень 2 — новое: la stazione ────────────────────────
+    { id: "vedere-7", level: 2, form: "vedo", type: "aff", it: "Vedo la stazione.", ru: "Я вижу вокзал." },
+    { id: "vedere-8", level: 2, form: "vedi", type: "aff", it: "Vedi la stazione.", ru: "Ты видишь вокзал." },
+    { id: "vedere-9", level: 2, form: "vede", type: "aff", it: "Vede la stazione.", ru: "Вы видите вокзал." },
+    { id: "vedere-10", level: 2, form: "vedo", type: "neg", it: "Non vedo la stazione.", ru: "Я не вижу вокзал." },
+    { id: "vedere-11", level: 2, form: "vedi", type: "neg", it: "Non vedi la stazione.", ru: "Ты не видишь вокзал." },
+    { id: "vedere-12", level: 2, form: "vede", type: "neg", it: "Non vede la stazione.", ru: "Вы не видите вокзал." },
+
+    // ── Уровень 3 — новое: il menu ────────────────────────────
+    { id: "vedere-13", level: 3, form: "vedo", type: "aff", it: "Vedo il menu.", ru: "Я вижу меню." },
+    { id: "vedere-14", level: 3, form: "vedi", type: "aff", it: "Vedi il menu.", ru: "Ты видишь меню." },
+    { id: "vedere-15", level: 3, form: "vede", type: "aff", it: "Vede il menu.", ru: "Вы видите меню." },
+    { id: "vedere-16", level: 3, form: "vedo", type: "neg", it: "Non vedo il menu.", ru: "Я не вижу меню." },
+    { id: "vedere-17", level: 3, form: "vedi", type: "neg", it: "Non vedi il menu.", ru: "Ты не видишь меню." },
+    { id: "vedere-18", level: 3, form: "vede", type: "neg", it: "Non vede il menu.", ru: "Вы не видите меню." },
+
+    // ── Уровень 4 — новое: il conto ───────────────────────────
+    { id: "vedere-19", level: 4, form: "vedo", type: "aff", it: "Vedo il conto.", ru: "Я вижу счёт." },
+    { id: "vedere-20", level: 4, form: "vedi", type: "aff", it: "Vedi il conto.", ru: "Ты видишь счёт." },
+    { id: "vedere-21", level: 4, form: "vede", type: "aff", it: "Vede il conto.", ru: "Вы видите счёт." },
+    { id: "vedere-22", level: 4, form: "vedo", type: "neg", it: "Non vedo il conto.", ru: "Я не вижу счёт." },
+    { id: "vedere-23", level: 4, form: "vedi", type: "neg", it: "Non vedi il conto.", ru: "Ты не видишь счёт." },
+    { id: "vedere-24", level: 4, form: "vede", type: "neg", it: "Non vede il conto.", ru: "Вы не видите счёт." },
+
+    // ── Уровень 5 — новое: il mare ────────────────────────────
+    { id: "vedere-25", level: 5, form: "vedi", type: "quest", it: "Vedi il mare?", ru: "Ты видишь море?" },
+    { id: "vedere-26", level: 5, form: "vede", type: "quest", it: "Vede il mare?", ru: "Вы видите море?" },
+
+    // ── Уровень 6 — новое: la chiesa ──────────────────────────
+    { id: "vedere-27", level: 6, form: "vedi", type: "quest", it: "Vedi la chiesa?", ru: "Ты видишь церковь?" },
+    { id: "vedere-28", level: 6, form: "vede", type: "quest", it: "Vede la chiesa?", ru: "Вы видите церковь?" },
+  ],
+
+  cercare: [
+    // ── Уровень 1 — новое: l'hotel ────────────────────────────
+    { id: "cercare-1", level: 1, form: "cerco", type: "aff", it: "Cerco l'hotel.", ru: "Я ищу отель." },
+    { id: "cercare-2", level: 1, form: "cerchi", type: "aff", it: "Cerchi l'hotel.", ru: "Ты ищешь отель." },
+    { id: "cercare-3", level: 1, form: "cerca", type: "aff", it: "Cerca l'hotel.", ru: "Вы ищете отель." },
+    { id: "cercare-4", level: 1, form: "cerco", type: "neg", it: "Non cerco l'hotel.", ru: "Я не ищу отель." },
+    { id: "cercare-5", level: 1, form: "cerchi", type: "neg", it: "Non cerchi l'hotel.", ru: "Ты не ищешь отель." },
+    { id: "cercare-6", level: 1, form: "cerca", type: "neg", it: "Non cerca l'hotel.", ru: "Вы не ищете отель." },
+
+    // ── Уровень 2 — новое: la stazione ────────────────────────
+    { id: "cercare-7", level: 2, form: "cerco", type: "aff", it: "Cerco la stazione.", ru: "Я ищу вокзал." },
+    { id: "cercare-8", level: 2, form: "cerchi", type: "aff", it: "Cerchi la stazione.", ru: "Ты ищешь вокзал." },
+    { id: "cercare-9", level: 2, form: "cerca", type: "aff", it: "Cerca la stazione.", ru: "Вы ищете вокзал." },
+    { id: "cercare-10", level: 2, form: "cerco", type: "neg", it: "Non cerco la stazione.", ru: "Я не ищу вокзал." },
+    { id: "cercare-11", level: 2, form: "cerchi", type: "neg", it: "Non cerchi la stazione.", ru: "Ты не ищешь вокзал." },
+    { id: "cercare-12", level: 2, form: "cerca", type: "neg", it: "Non cerca la stazione.", ru: "Вы не ищете вокзал." },
+
+    // ── Уровень 3 — новое: il bagno ───────────────────────────
+    { id: "cercare-13", level: 3, form: "cerco", type: "aff", it: "Cerco il bagno.", ru: "Я ищу туалет." },
+    { id: "cercare-14", level: 3, form: "cerchi", type: "aff", it: "Cerchi il bagno.", ru: "Ты ищешь туалет." },
+    { id: "cercare-15", level: 3, form: "cerca", type: "aff", it: "Cerca il bagno.", ru: "Вы ищете туалет." },
+    { id: "cercare-16", level: 3, form: "cerco", type: "neg", it: "Non cerco il bagno.", ru: "Я не ищу туалет." },
+    { id: "cercare-17", level: 3, form: "cerchi", type: "neg", it: "Non cerchi il bagno.", ru: "Ты не ищешь туалет." },
+    { id: "cercare-18", level: 3, form: "cerca", type: "neg", it: "Non cerca il bagno.", ru: "Вы не ищете туалет." },
+
+    // ── Уровень 4 — новое: un taxi ────────────────────────────
+    { id: "cercare-19", level: 4, form: "cerco", type: "aff", it: "Cerco un taxi.", ru: "Я ищу такси." },
+    { id: "cercare-20", level: 4, form: "cerchi", type: "aff", it: "Cerchi un taxi.", ru: "Ты ищешь такси." },
+    { id: "cercare-21", level: 4, form: "cerca", type: "aff", it: "Cerca un taxi.", ru: "Вы ищете такси." },
+    { id: "cercare-22", level: 4, form: "cerco", type: "neg", it: "Non cerco un taxi.", ru: "Я не ищу такси." },
+    { id: "cercare-23", level: 4, form: "cerchi", type: "neg", it: "Non cerchi un taxi.", ru: "Ты не ищешь такси." },
+    { id: "cercare-24", level: 4, form: "cerca", type: "neg", it: "Non cerca un taxi.", ru: "Вы не ищете такси." },
+
+    // ── Уровень 5 — новое: la farmacia ────────────────────────
+    { id: "cercare-25", level: 5, form: "cerchi", type: "quest", it: "Cerchi la farmacia?", ru: "Ты ищешь аптеку?" },
+    { id: "cercare-26", level: 5, form: "cerca", type: "quest", it: "Cerca la farmacia?", ru: "Вы ищете аптеку?" },
+
+    // ── Уровень 6 — новое: il museo ───────────────────────────
+    { id: "cercare-27", level: 6, form: "cerchi", type: "quest", it: "Cerchi il museo?", ru: "Ты ищешь музей?" },
+    { id: "cercare-28", level: 6, form: "cerca", type: "quest", it: "Cerca il museo?", ru: "Вы ищете музей?" },
+  ],
+
+  prendere: [
+    // ── Уровень 1 — новое: un caffè ───────────────────────────
+    { id: "prendere-1", level: 1, form: "prendo", type: "aff", it: "Prendo un caffè.", ru: "Я беру кофе." },
+    { id: "prendere-2", level: 1, form: "prendi", type: "aff", it: "Prendi un caffè.", ru: "Ты берёшь кофе." },
+    { id: "prendere-3", level: 1, form: "prende", type: "aff", it: "Prende un caffè.", ru: "Вы берёте кофе." },
+    { id: "prendere-4", level: 1, form: "prendo", type: "neg", it: "Non prendo un caffè.", ru: "Я не беру кофе." },
+    { id: "prendere-5", level: 1, form: "prendi", type: "neg", it: "Non prendi un caffè.", ru: "Ты не берёшь кофе." },
+    { id: "prendere-6", level: 1, form: "prende", type: "neg", it: "Non prende un caffè.", ru: "Вы не берёте кофе." },
+
+    // ── Уровень 2 — новое: il treno ───────────────────────────
+    { id: "prendere-7", level: 2, form: "prendo", type: "aff", it: "Prendo il treno.", ru: "Я беру поезд." },
+    { id: "prendere-8", level: 2, form: "prendi", type: "aff", it: "Prendi il treno.", ru: "Ты берёшь поезд." },
+    { id: "prendere-9", level: 2, form: "prende", type: "aff", it: "Prende il treno.", ru: "Вы берёте поезд." },
+    { id: "prendere-10", level: 2, form: "prendo", type: "neg", it: "Non prendo il treno.", ru: "Я не беру поезд." },
+    { id: "prendere-11", level: 2, form: "prendi", type: "neg", it: "Non prendi il treno.", ru: "Ты не берёшь поезд." },
+    { id: "prendere-12", level: 2, form: "prende", type: "neg", it: "Non prende il treno.", ru: "Вы не берёте поезд." },
+
+    // ── Уровень 3 — новое: un taxi ────────────────────────────
+    { id: "prendere-13", level: 3, form: "prendo", type: "aff", it: "Prendo un taxi.", ru: "Я беру такси." },
+    { id: "prendere-14", level: 3, form: "prendi", type: "aff", it: "Prendi un taxi.", ru: "Ты берёшь такси." },
+    { id: "prendere-15", level: 3, form: "prende", type: "aff", it: "Prende un taxi.", ru: "Вы берёте такси." },
+    { id: "prendere-16", level: 3, form: "prendo", type: "neg", it: "Non prendo un taxi.", ru: "Я не беру такси." },
+    { id: "prendere-17", level: 3, form: "prendi", type: "neg", it: "Non prendi un taxi.", ru: "Ты не берёшь такси." },
+    { id: "prendere-18", level: 3, form: "prende", type: "neg", it: "Non prende un taxi.", ru: "Вы не берёте такси." },
+
+    // ── Уровень 4 — новое: la pizza ───────────────────────────
+    { id: "prendere-19", level: 4, form: "prendo", type: "aff", it: "Prendo la pizza.", ru: "Я беру пиццу." },
+    { id: "prendere-20", level: 4, form: "prendi", type: "aff", it: "Prendi la pizza.", ru: "Ты берёшь пиццу." },
+    { id: "prendere-21", level: 4, form: "prende", type: "aff", it: "Prende la pizza.", ru: "Вы берёте пиццу." },
+    { id: "prendere-22", level: 4, form: "prendo", type: "neg", it: "Non prendo la pizza.", ru: "Я не беру пиццу." },
+    { id: "prendere-23", level: 4, form: "prendi", type: "neg", it: "Non prendi la pizza.", ru: "Ты не берёшь пиццу." },
+    { id: "prendere-24", level: 4, form: "prende", type: "neg", it: "Non prende la pizza.", ru: "Вы не берёте пиццу." },
+
+    // ── Уровень 5 — новое: il bus ─────────────────────────────
+    { id: "prendere-25", level: 5, form: "prendi", type: "quest", it: "Prendi il bus?", ru: "Ты берёшь автобус?" },
+    { id: "prendere-26", level: 5, form: "prende", type: "quest", it: "Prende il bus?", ru: "Вы берёте автобус?" },
+
+    // ── Уровень 6 — новое: un gelato ──────────────────────────
+    { id: "prendere-27", level: 6, form: "prendi", type: "quest", it: "Prendi un gelato?", ru: "Ты берёшь джелато?" },
+    { id: "prendere-28", level: 6, form: "prende", type: "quest", it: "Prende un gelato?", ru: "Вы берёте джелато?" },
+  ]
+};
+
+const BLOCK_NAMES = {
+  1: "Essere и avere",
+  2: "Модальные глаголы",
+  3: "Готовые блоки",
+  4: "Повседневные глаголы",
+  5: "Третье лицо и женский род",
+  6: "Прошедшее для аварий"
+};
+
+// ── Справка по блокам ───────────────────────────────────────────────────
+// Короткое объяснение темы: что за конструкция и где на ней спотыкаются.
+
+const BLOCK_INFO = {
+  1: {
+    intro: "Два глагола, на которых держится половина бытовой речи: essere — быть, avere — иметь.",
+    points: [
+      ["essere", "sono — я есть, sei — ты, è — он, она, Вы. Sono russo. Non sono italiano."],
+      ["avere", "ho — у меня есть, hai — у тебя, ha — у него, у Вас. Ho una camera."],
+      ["Возраст и голод — через avere", "Итальянец не «есть тридцать лет», а «имеет» их: Ho trent'anni. Так же Ho fame — я голоден, буквально «имею голод»."],
+      ["Русское «у меня есть» — это ho", "Никакого отдельного глагола «быть у кого-то» нет. Non ho tempo — у меня нет времени."],
+      ["Отрицание", "non ставится перед глаголом и больше ничего не меняет: Non è caro."],
+      ["Вежливое «Вы» — это Lei", "Формально это «она», поэтому глагол в третьем лице: Lei è italiano?"]
+    ]
+  },
+  2: {
+    intro: "Модальные глаголы: мочь, быть должным, хотеть. После них всегда идёт инфинитив.",
+    points: [
+      ["potere — мочь", "posso — я могу, puoi — ты, può — он, Вы. Posso pagare con la carta?"],
+      ["dovere — быть должным", "devo — мне нужно, devi — тебе, deve — ему, Вам. Devo andare."],
+      ["volere — хотеть", "voglio — я хочу, vuoi — ты, vuole — он, Вы. Vuole un caffè?"],
+      ["vorrei вместо voglio", "Voglio un caffè звучит требовательно. В кафе, отеле, магазине говорят vorrei — «я хотел бы». Это форма вежливости, выучи её целиком."],
+      ["После модального — инфинитив", "Не «могу плачу», а Posso pagare. Devo prendere il treno."],
+      ["Вопрос без перестановки", "Порядок слов тот же, меняется только интонация: Può ripetere? — Вы можете повторить?"]
+    ]
+  },
+  3: {
+    intro: "Готовые обороты, которые проще выучить целиком, чем разбирать по частям.",
+    points: [
+      ["dov'è — где находится", "Это dove + è, слитно. Dov'è il bagno? Для множественного — dove sono."],
+      ["c'è и ci sono — есть, имеется", "C'è un ristorante qui? — для одного. Ci sono due camere — для нескольких."],
+      ["quanto costa / costano", "Одна вещь — costa, несколько — costano. Quanto costano?"],
+      ["ho bisogno di — мне нужно", "Буквально «я имею нужду в». Ho bisogno di aiuto."],
+      ["Апостроф вместо гласной", "Перед гласной гласная выпадает: dove è → dov'è, ci è → c'è, lo hotel → l'hotel. Это одно слово, пробела внутри нет."],
+      ["Вежливые формулы", "per favore — пожалуйста, mi scusi — извините, va bene — хорошо, договорились."]
+    ]
+  },
+  4: {
+    intro: "Обычные глаголы в настоящем времени. Окончание само говорит, кто действует.",
+    points: [
+      ["Правильные на -are", "parlare: parlo — я, parli — ты, parla — он, Вы. Parlo un po' di italiano."],
+      ["Глаголы на -ire со вставкой -isc-", "capire: capisco, capisci, capisce. Отсюда Non capisco — я не понимаю."],
+      ["Неправильные, но частые", "andare: vado, vai, va. sapere: so, sai, sa. Их учат как есть."],
+      ["Местоимение io опускают", "Parlo уже значит «я говорю». Io parlo говорят только когда противопоставляют: «я-то говорю, а он нет»."],
+      ["mi piace — мне нравится", "Подлежащее здесь то, что нравится, а не ты: Mi piace l'Italia. Если нравится несколько вещей — mi piacciono."],
+      ["so и conosco", "so — знаю факт: Non so dov'è. Про знакомство с человеком или городом был бы другой глагол, conoscere."]
+    ]
+  },
+  5: {
+    intro: "Третье лицо и согласование по роду. Одна форма глагола обслуживает «она» и вежливое «Вы».",
+    points: [
+      ["lei и Lei", "lei — она, Lei с заглавной — вежливое «Вы». Глагол один и тот же: Lei è italiana — она итальянка, Lei è italiano? — Вы итальянец?"],
+      ["Формы третьего лица", "è, ha, parla, vive, capisce, vuole, deve, può. Их стоит узнавать с ходу."],
+      ["Прилагательные меняют окончание", "Мужской род на -o, женский на -a: stanco / stanca, contento / contenta, italiano / italiana."],
+      ["Отрицание там же", "non перед глаголом: Lei non ha tempo."],
+      ["Ошибка, которую делают все", "Сказать Lei è stanco про женщину. Прилагательное должно согласоваться: stanca."]
+    ]
+  },
+  6: {
+    intro: "Прошедшее время passato prossimo — то, что нужно, когда что-то уже случилось: потерял, заплатил, не получил.",
+    points: [
+      ["Как строится", "Вспомогательный глагол в настоящем плюс причастие: ho pagato — я заплатил."],
+      ["Причастие", "-are → -ato, -ere → -uto, -ire → -ito. pagare → pagato, ricevere → ricevuto, capire → capito."],
+      ["Неправильные причастия", "perdere → perso, vedere → visto, prendere → preso. Учатся отдельно."],
+      ["avere или essere", "Большинство глаголов берут avere: ho perso, ho chiamato. Глаголы движения и изменения состояния берут essere: sono arrivato."],
+      ["С essere причастие согласуется", "Sono arrivato — сказал мужчина, Lei è arrivata — про женщину. С avere причастие не меняется."],
+      ["Отрицание перед вспомогательным", "Non ho capito — я не понял. Non ho ricevuto niente."]
+    ]
+  }
+};
+
+const TYPE_NAMES = { aff: "утверждение", quest: "вопрос", neg: "отрицание" };
+
+const MASTERED = 2; // сколько верных ответов нужно, чтобы фраза считалась усвоенной
+
+// ═══════════════════════════════════════════════════════════════════════
+// Хранилище
+// ═══════════════════════════════════════════════════════════════════════
+
+const STORAGE_KEY = "italiano-trainer-v1";
+
+let storageOk = false;
+let saved = { "it-ru": {}, "ru-it": {}, dir: "ru-it", block: "all", mode: "blocks", verb: "dovere" };
+
+function loadSaved() {
+  try {
+    const probe = STORAGE_KEY + "-probe";
+    localStorage.setItem(probe, "1");
+    localStorage.removeItem(probe);
+    storageOk = true;
+  } catch (e) {
+    storageOk = false;
+    return;
+  }
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data && typeof data === "object") {
+      if (data["it-ru"] && typeof data["it-ru"] === "object") saved["it-ru"] = data["it-ru"];
+      if (data["ru-it"] && typeof data["ru-it"] === "object") saved["ru-it"] = data["ru-it"];
+      if (data.dir === "it-ru" || data.dir === "ru-it") saved.dir = data.dir;
+      if (data.block === "all" || BLOCK_NAMES[data.block]) saved.block = String(data.block);
+      if (data.mode === "blocks" || data.mode === "verbs") saved.mode = data.mode;
+      if (VERB_PHRASES[data.verb]) saved.verb = data.verb;
+    }
+  } catch (e) { /* битые данные — начинаем с чистого листа */ }
+}
+
+function persist() {
+  if (!storageOk) return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+  } catch (e) {
+    storageOk = false;
+    renderFooter();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Озвучка
+// ═══════════════════════════════════════════════════════════════════════
+
+let voices = [];
+let voiceHintShown = false;
+
+function loadVoices() {
+  if (!("speechSynthesis" in window)) return;
+  voices = speechSynthesis.getVoices();
+  checkItalianVoice();
+}
+
+function checkItalianVoice() {
+  if (voiceHintShown || voices.length === 0) return;
+  const hasIt = voices.some(v => v.lang && v.lang.toLowerCase().startsWith("it"));
+  if (!hasIt) {
+    voiceHintShown = true;
+    document.getElementById("voiceHint").hidden = false;
+  }
+}
+
+function speak(text) {
+  if (!("speechSynthesis" in window)) return;
+  pendingSpeech = null;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "it-IT";
+  u.rate = 0.85;                          // медленнее обычного, для обучения
+  const v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith("it"));
+  if (v) u.voice = v;
+  speechSynthesis.speak(u);
+}
+
+// Браузеры не дают озвучивать, пока пользователь ни разу не взаимодействовал
+// со страницей. Автоозвучку до этого момента откладываем до первого касания/клавиши.
+let pendingSpeech = null;
+
+function autoSpeak(text) {
+  const ua = navigator.userActivation;
+  if (ua && !ua.hasBeenActive) pendingSpeech = text;
+  else speak(text);
+}
+
+function flushPendingSpeech(e) {
+  if (!pendingSpeech) return;
+  // 🔊 и пробел озвучат сами — не запускаем дважды
+  if (e.type === "keydown" && (e.key === " " || e.code === "Space")) return;
+  if (e.target && e.target.closest && e.target.closest("#speak")) return;
+  speak(pendingSpeech);
+}
+
+document.addEventListener("pointerdown", flushPendingSpeech, true);
+document.addEventListener("keydown", flushPendingSpeech, true);
+
+// ═══════════════════════════════════════════════════════════════════════
+// Справка по блоку
+// ═══════════════════════════════════════════════════════════════════════
+
+let infoOpen = false;
+
+function toggleInfo() {
+  infoOpen = !infoOpen;
+  renderInfo();
+}
+
+function caption(text) {
+  const el = document.createElement("div");
+  el.className = "forms-caption";
+  el.textContent = text;
+  return el;
+}
+
+// Ячейка с примером: итальянская фраза, под ней серым перевод
+function exampleCell(it, ru) {
+  const td = document.createElement("td");
+  td.textContent = it;
+  const span = document.createElement("span");
+  span.className = "ru";
+  span.textContent = ru;
+  td.appendChild(span);
+  return td;
+}
+
+// Форма глагола: общая основа обычным, окончание жирным
+function formCell(form, stem) {
+  const td = document.createElement("td");
+  td.className = "form";
+  if (stem && form.toLowerCase().startsWith(stem.toLowerCase())) {
+    td.textContent = form.slice(0, stem.length);
+    const b = document.createElement("b");
+    b.textContent = form.slice(stem.length);
+    td.appendChild(b);
+  } else {
+    td.textContent = form;
+  }
+  return td;
+}
+
+function formsTable(f) {
+  const table = document.createElement("table");
+  table.className = "forms";
+  for (const [person, form, it, ru] of f.rows) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.className = "person";
+    td.textContent = person;
+    tr.append(td, formCell(form, f.stem), exampleCell(it, ru));
+    table.appendChild(tr);
+  }
+  return table;
+}
+
+function typesTable(f) {
+  const table = document.createElement("table");
+  table.className = "forms";
+  for (const [type, it, ru] of f.types) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.className = "person";
+    td.textContent = type;
+    tr.append(td, exampleCell(it, ru));
+    table.appendChild(tr);
+  }
+  return table;
+}
+
+function renderInfo() {
+  const panel = document.getElementById("infoPanel");
+  const btn = document.getElementById("info");
+  btn.classList.toggle("open", infoOpen);
+  panel.hidden = !infoOpen;
+  panel.innerHTML = "";
+  if (!infoOpen) return;
+
+  const info = verbMode() ? VERB_INFO[saved.verb] : BLOCK_INFO[state.phrase.block];
+  if (!info) return;
+
+  const p = document.createElement("p");
+  p.textContent = info.intro;
+  panel.appendChild(p);
+
+  // В режиме глагола сначала две таблицы: формы по лицам и типы фразы
+  if (verbMode() && VERB_FORMS[saved.verb]) {
+    const f = VERB_FORMS[saved.verb];
+
+    panel.appendChild(formsTable(f));
+    // Сноска под таблицей: своя, если задана, иначе общая для неправильных
+    const noteText = f.note !== undefined ? f.note
+      : (f.stem ? null : "Формы не похожи друг на друга — глагол неправильный, учатся целиком.");
+    if (noteText) {
+      const note = document.createElement("p");
+      note.className = "forms-note";
+      note.textContent = noteText;
+      panel.appendChild(note);
+    }
+
+    panel.appendChild(caption("Как меняется фраза"));
+    panel.appendChild(typesTable(f));
+  }
+
+  const dl = document.createElement("dl");
+  for (const [term, text] of info.points) {
+    const dt = document.createElement("dt");
+    dt.textContent = term;
+    const dd = document.createElement("dd");
+    dd.textContent = text;
+    dl.append(dt, dd);
+  }
+  panel.appendChild(dl);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Подсказка по слову
+// ═══════════════════════════════════════════════════════════════════════
+
+// Слово в задании можно нажать и увидеть перевод прямо под ним.
+// «un po'» показывается как одно слово, поэтому склеиваем его при разметке.
+function renderPrompt(text, lang) {
+  const el = document.getElementById("prompt");
+  el.innerHTML = "";
+  hideTip();
+  const chunks = text.split(/\s+/);
+  for (let i = 0; i < chunks.length; i++) {
+    let chunk = chunks[i];
+    if (chunk.toLowerCase() === "un" && chunks[i + 1] && chunks[i + 1].startsWith("po'")) {
+      chunk += " " + chunks[++i];
+    }
+    const key = chunk.replace(/[.?!,]+$/, "").toLowerCase();
+    const span = document.createElement("span");
+    span.textContent = chunk;
+    if (GLOSS[lang][key]) {
+      span.className = "w";
+      span.dataset.gloss = GLOSS[lang][key];
+    }
+    el.appendChild(span);
+    if (i < chunks.length - 1) el.appendChild(document.createTextNode(" "));
+  }
+}
+
+function hideTip() {
+  const tip = document.getElementById("tip");
+  tip.hidden = true;
+  const open = document.querySelector(".prompt .w.open");
+  if (open) open.classList.remove("open");
+}
+
+function showTip(span) {
+  const tip = document.getElementById("tip");
+  const row = document.getElementById("taskRow");
+  hideTip();
+  span.classList.add("open");
+  tip.textContent = span.dataset.gloss;
+  tip.hidden = false;
+  // Ставим под словом и, если не влезает, подвигаем внутрь колонки
+  const s = span.getBoundingClientRect();
+  const r = row.getBoundingClientRect();
+  let left = s.left - r.left;
+  const maxLeft = row.clientWidth - tip.offsetWidth;
+  if (left > maxLeft) left = maxLeft;
+  tip.style.left = Math.max(0, left) + "px";
+  tip.style.top = (s.bottom - r.top + 6) + "px";
+}
+
+document.addEventListener("click", e => {
+  const w = e.target.closest && e.target.closest(".prompt .w");
+  if (w) { w.classList.contains("open") ? hideTip() : showTip(w); return; }
+  hideTip();
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Копирование
+// ═══════════════════════════════════════════════════════════════════════
+
+// По file:// современный clipboard API обычно недоступен, поэтому есть запасной путь
+function copyPhrase() {
+  const text = state.phrase.it;
+  const done = ok => {
+    const b = document.getElementById("copy");
+    b.textContent = ok ? "✓" : "✕";
+    setTimeout(() => { b.textContent = "⧉"; }, 900);
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => done(true), () => done(legacyCopy(text)));
+    return;
+  }
+  done(legacyCopy(text));
+}
+
+function legacyCopy(text) {
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Слова
+// ═══════════════════════════════════════════════════════════════════════
+
+function lcFirst(s) { return s.charAt(0).toLowerCase() + s.slice(1); }
+function ucFirst(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+// Разбить фразу на слова: по пробелам, срезать финальные .?!,
+// Апострофы остаются внутри токена; «un po'» — один токен.
+function tokenize(s) {
+  const raw = s.trim().split(/\s+/)
+    .map(t => t.replace(/[.?!,]+$/, ""))
+    .filter(Boolean);
+  const out = [];
+  for (let i = 0; i < raw.length; i++) {
+    if (raw[i].toLowerCase() === "un" && raw[i + 1] === "po'") {
+      out.push(raw[i] + " " + raw[i + 1]);
+      i++;
+    } else {
+      out.push(raw[i]);
+    }
+  }
+  if (out.length) out[0] = lcFirst(out[0]);
+  return out;
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function randInt(min, max) { return min + Math.floor(Math.random() * (max - min + 1)); }
+
+function pickDistractors(phrase, lang) {
+  const correct = tokenize(phrase[lang]);
+  const correctSet = new Set(correct.map(t => t.toLowerCase()));
+  const dict = lang === "it" ? CONFUSABLES : CONFUSABLES_RU;
+  const target = randInt(2, 4);
+  const picked = [];
+  const pickedSet = new Set();
+
+  function add(w) {
+    const key = w.toLowerCase();
+    if (correctSet.has(key) || pickedSet.has(key)) return false;
+    picked.push(w);
+    pickedSet.add(key);
+    return true;
+  }
+
+  // 0. В режиме глагола — другие формы того же глагола. Это и есть
+  //    предмет тренировки, поэтому они идут первыми и всегда.
+  if (verbMode() && lang === "it") {
+    // У servire форма двухсловная — mi serve, ti serve, Le serve, — а путается
+    // в ней только местоимение. Берём первое слово формы: оно и есть плитка.
+    const forms = ((VERB_FORMS[saved.verb] || {}).rows || [])
+      .map(r => r[1].split(" ")[0]);
+    for (const w of shuffle(forms)) {
+      if (picked.length >= 1) break;   // одной чужой формы хватает, остальное место нужнее
+      add(w);
+    }
+  }
+
+  // 1. «Двойники» из словаря — по 1–2 на каждое слово-ключ.
+  //    Знаменательные слова идут первыми: двойник к rossa полезнее, чем к una.
+  const FUNCTION_WORDS = ["un", "una", "uno", "il", "la", "lo", "le", "gli", "i",
+                          "di", "a", "in", "con", "da", "per", "non", "mi", "ti", "si"];
+  const present = correct.map(t => t.toLowerCase()).filter(t => dict[t]);
+  const keys = [...shuffle(present.filter(t => !FUNCTION_WORDS.includes(t))),
+                ...shuffle(present.filter(t => FUNCTION_WORDS.includes(t)))];
+  for (const k of keys) {
+    if (picked.length >= 4) break;
+    let n = randInt(1, 2);
+    for (const w of shuffle(dict[k])) {
+      if (n === 0 || picked.length >= 4) break;
+      if (add(w)) n--;
+    }
+  }
+
+  // 2. Добрать до нужного количества словами из других фраз того же блока
+  if (picked.length < target) {
+    // В режиме глагола добираем только из уже пройденных уровней, иначе на
+    // первом уровне в банк попадёт слово из последнего.
+    const near = verbMode()
+      ? selection().filter(p => (p.level || 1) <= (phrase.level || 1))
+      : PHRASES.filter(p => p.block === phrase.block);
+    const pool = shuffle(
+      near.filter(p => p.id !== phrase.id).flatMap(p => tokenize(p[lang]))
+    );
+    for (const w of pool) {
+      if (picked.length >= target) break;
+      add(w);
+    }
+  }
+  return picked;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Состояние
+// ═══════════════════════════════════════════════════════════════════════
+
+const state = {
+  queue: [],
+  phrase: null,
+  correct: [],     // эталонные токены (из основного варианта — из них собираются плитки)
+  matched: "",     // вариант перевода, с которым совпал ответ
+  typed: "",       // что набрано с клавиатуры, но ещё не подставлено
+  skip: "",        // хвост только что подставленного слова
+  answer: [],      // плитки в строке ответа, в порядке сборки
+  tiles: [],       // все плитки на своих местах в банке: {id, text, used}
+  solved: false
+};
+
+function bankTiles() { return state.tiles.filter(t => !t.used); }
+
+// Все допустимые переводы: основной + альтернативный порядок слов
+function variants(p, lang) {
+  return [p[lang], ...(p[lang + "Alt"] || [])];
+}
+
+// ── Свободный порядок слов в русском ────────────────────────────────────
+// Русский порядок слов гибкий: «Вы можете мне помочь» = «Вы мне можете
+// помочь» = «Можете вы помочь мне». Поэтому для русского ответа порядок
+// не проверяем — сверяем набор слов.
+//
+// Держим только служебные слова: предлог и «не» обязаны стоять перед тем
+// же словом, что и в эталоне. Иначе прошли бы «в завтра Рим» и «не я
+// устал», где перестановка меняет смысл.
+//
+// Итальянский порядок проверяется как есть: он и есть предмет обучения.
+
+const BINDERS_RU = ["не", "в", "во", "на", "из", "с", "со", "у", "до", "от",
+                    "за", "по", "о", "об", "при", "про", "к", "для", "над", "под"];
+
+function wordSet(tokens) { return tokens.slice().sort().join(" "); }
+
+// Пары «служебное слово → слово справа от него»
+function binderPairs(tokens) {
+  const pairs = [];
+  tokens.forEach((w, i) => {
+    if (BINDERS_RU.includes(w)) pairs.push(w + "→" + (tokens[i + 1] || ""));
+  });
+  return pairs.sort().join(", ");
+}
+
+// Какой из допустимых переводов совпал с ответом, или null
+function matchAnswer(p, lang, tokens) {
+  const given = tokens.map(w => w.toLowerCase());
+  for (const v of variants(p, lang)) {
+    const base = tokenize(v).map(w => w.toLowerCase());
+    if (lang !== "ru") {
+      if (base.join(" ") === given.join(" ")) return v;
+    } else if (wordSet(base) === wordSet(given) && binderPairs(base) === binderPairs(given)) {
+      return v;
+    }
+  }
+  return null;
+}
+
+function progress() { return saved[saved.dir]; }
+function sourceLang() { return saved.dir === "it-ru" ? "it" : "ru"; }
+function targetLang() { return saved.dir === "it-ru" ? "ru" : "it"; }
+
+function verbMode() { return saved.mode === "verbs"; }
+
+// Итальянские слова, которые на этом уровне встречаются впервые.
+// Их и трудно запомнить, поэтому показываем перевод отдельной строкой.
+function newWords(phrase) {
+  if (!verbMode() || !phrase.level) return [];
+  const before = new Set();
+  for (const p of selection()) {
+    if ((p.level || 1) < phrase.level) {
+      for (const w of tokenize(p.it)) before.add(w.toLowerCase());
+    }
+  }
+  // Формы самого глагола сюда не попадают: они и есть предмет тренировки,
+  // их показывает таблица в карточке, а не строка новых слов.
+  const forms = new Set(((VERB_FORMS[saved.verb] || {}).rows || [])
+    .flatMap(r => r[1].toLowerCase().split(" ")));
+  const out = [];
+  for (const w of tokenize(phrase.it)) {
+    const k = w.toLowerCase();
+    if (!before.has(k) && !forms.has(k) && !out.includes(k) && GLOSS.it[k]) out.push(k);
+  }
+  return out;
+}
+
+function selection() {
+  if (verbMode()) return VERB_PHRASES[saved.verb] || [];
+  return PHRASES.filter(p => saved.block === "all" || String(p.block) === saved.block);
+}
+
+// Глаголы, для которых фразы уже написаны
+function readyVerbs() { return Object.keys(VERB_PHRASES); }
+
+// Внутри группы — от простого к сложному: сначала первый уровень,
+// внутри уровня вперемешку. У блочных фраз уровня нет, там всё первый.
+function byLevel(list) {
+  const out = [];
+  const levels = [...new Set(list.map(p => p.level || 1))].sort((a, b) => a - b);
+  for (const lvl of levels) out.push(...shuffle(list.filter(p => (p.level || 1) === lvl)));
+  return out;
+}
+
+// Сначала нерешённые, потом решённые меньше двух раз, потом остальные
+function buildQueue(avoidId) {
+  const prog = progress();
+  const fresh = [], learning = [], done = [];
+  for (const p of selection()) {
+    const c = prog[p.id] || 0;
+    if (c === 0) fresh.push(p);
+    else if (c < MASTERED) learning.push(p);
+    else done.push(p);
+  }
+  const q = [...byLevel(fresh), ...byLevel(learning), ...byLevel(done)];
+  if (q.length > 1 && q[0].id === avoidId) [q[0], q[1]] = [q[1], q[0]];
+  return q;
+}
+
+function nextPhrase(rebuild) {
+  const prevId = state.phrase ? state.phrase.id : null;
+  if (rebuild || state.queue.length === 0) state.queue = buildQueue(prevId);
+  const p = state.queue.shift();
+  state.phrase = p;
+  state.solved = false;
+  state.correct = tokenize(p[targetLang()]);
+  const words = [...state.correct, ...pickDistractors(p, targetLang())];
+  // Места плиток в банке задаются один раз и больше не меняются
+  state.tiles = shuffle(words.map((text, i) => ({ id: i, text, used: false })));
+  state.answer = [];
+  state.typed = "";
+  state.skip = "";
+  render();
+  // IT → RU: сразу проговариваем задание, чтобы связать звучание с текстом
+  if (saved.dir === "it-ru") autoSpeak(p.it);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Действия
+// ═══════════════════════════════════════════════════════════════════════
+
+function moveToAnswer(id) {
+  if (state.solved) return;
+  const t = state.tiles.find(t => t.id === id);
+  if (!t || t.used) return;
+  t.used = true;                 // место в банке остаётся за плиткой
+  state.answer.push(t);
+  state.typed = "";
+  state.skip = "";
+  renderTiles();
+}
+
+function moveToBank(id) {
+  if (state.solved) return;
+  const i = state.answer.findIndex(t => t.id === id);
+  if (i < 0) return;
+  state.answer.splice(i, 1)[0].used = false;   // вернётся на своё место
+  state.typed = "";
+  state.skip = "";
+  renderTiles();
+}
+
+function popLast() {
+  if (state.solved || state.answer.length === 0) return;
+  state.answer.pop().used = false;
+  state.typed = "";
+  state.skip = "";
+  renderTiles();
+}
+
+// ── Набор с клавиатуры ──────────────────────────────────────────────────
+// Плитка подставляется, как только набранное подходит ровно одному слову
+// в банке. Пока подходит несколько — ждём следующую букву. Точное
+// совпадение не подставляется само, если слово — начало другого
+// («я» при наличии «ясень»): такое подтверждается пробелом.
+//
+// Пробелы внутри плитки при сравнении не учитываются: пробел занят
+// подтверждением, поэтому «un po'» набирается как «unpo».
+
+function norm(s) { return s.toLowerCase().replace(/\s+/g, ""); }
+
+function matches(prefix) {
+  const p = norm(prefix);
+  const texts = new Set();
+  for (const t of bankTiles()) {
+    if (norm(t.text).startsWith(p)) texts.add(t.text.toLowerCase());
+  }
+  return [...texts];
+}
+
+// Сколько букв плитки уже набрано — для подчёркивания совпавшей части
+function matchLen(text, typed) {
+  let need = norm(typed).length, i = 0;
+  while (i < text.length && need > 0) {
+    if (!/\s/.test(text[i])) need--;
+    i++;
+  }
+  return i;
+}
+
+function insertText(text) {
+  const t = bankTiles().find(t => t.text.toLowerCase() === text);
+  if (t) moveToAnswer(t.id);   // moveToAnswer очистит набранное
+}
+
+function typeChar(ch) {
+  if (state.solved) return false;
+
+  // Слово подставилось по первым буквам, а человек дописывает его до конца.
+  // Эти буквы проглатываем, иначе «непонимаю» после «понимаю» поймало бы «нет».
+  if (!state.typed && state.skip && ch.toLowerCase() === state.skip[0]) {
+    state.skip = state.skip.slice(1);
+    return true;
+  }
+
+  const next = state.typed + ch;
+  const found = matches(next);
+  if (found.length === 0) {
+    // Продолжения нет. Если набранное — целое слово, подставляем его
+    // и начинаем новое с этой буквы: «не» + «п» → «не», дальше «п...».
+    if (confirmTyped()) { typeChar(ch); return true; }
+    return false;                              // такого слова нет — букву игнорируем
+  }
+  if (found.length === 1) {
+    const word = found[0];
+    insertText(word);
+    state.skip = norm(word).slice(norm(next).length);   // хвост, который можно дописать вхолостую
+    return true;
+  }
+  state.typed = next;
+  renderTiles();
+  return true;
+}
+
+// Пробел при наборе: подставить точное совпадение, если оно есть
+function confirmTyped() {
+  if (!state.typed) return false;
+  const exact = matches(state.typed).find(t => norm(t) === norm(state.typed));
+  if (!exact) return false;
+  insertText(exact);
+  return true;
+}
+
+function clearTyped() {
+  state.skip = "";
+  if (!state.typed) return false;
+  state.typed = "";
+  renderTiles();
+  return true;
+}
+
+let wrongTimer = null;
+
+function check() {
+  if (state.solved) { nextPhrase(false); return; }
+  if (state.answer.length === 0) return;
+
+  const match = matchAnswer(state.phrase, targetLang(), state.answer.map(t => t.text));
+
+  const box = document.getElementById("answer");
+  if (match) {
+    state.solved = true;
+    state.matched = match;
+    const prog = progress();
+    prog[state.phrase.id] = (prog[state.phrase.id] || 0) + 1;
+    persist();
+    render();
+  } else {
+    clearTimeout(wrongTimer);
+    box.classList.add("wrong");
+    wrongTimer = setTimeout(() => box.classList.remove("wrong"), 500);
+  }
+}
+
+function toggleDir() {
+  saved.dir = saved.dir === "ru-it" ? "it-ru" : "ru-it";
+  persist();
+  nextPhrase(true);
+}
+
+function setMode(m) {
+  if (saved.mode === m) return;
+  saved.mode = m;
+  persist();
+  state.phrase = null;
+  nextPhrase(true);
+}
+
+function setVerb(v) {
+  if (!VERB_PHRASES[v]) return;
+  saved.verb = v;
+  persist();
+  state.phrase = null;
+  nextPhrase(true);
+}
+
+function setBlock(b) {
+  saved.block = b;
+  persist();
+  state.phrase = null;
+  nextPhrase(true);
+}
+
+function resetProgress() {
+  if (!confirm("Сбросить весь прогресс в обоих направлениях?")) return;
+  saved["it-ru"] = {};
+  saved["ru-it"] = {};
+  persist();
+  nextPhrase(true);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Отрисовка
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderModes() {
+  const el = document.getElementById("modes");
+  el.innerHTML = "";
+  for (const [val, label] of [["blocks", "Блоки"], ["verbs", "Глаголы"]]) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    if (saved.mode === val) b.classList.add("active");
+    b.addEventListener("click", () => setMode(val));
+    el.appendChild(b);
+  }
+  document.getElementById("blocks").hidden = verbMode();
+  document.getElementById("verbs").hidden = !verbMode();
+}
+
+function renderVerbs() {
+  const sel = document.getElementById("verbSelect");
+  if (sel.options.length === 0) {
+    const ready = readyVerbs();
+    for (const { group, items } of VERBS) {
+      const og = document.createElement("optgroup");
+      og.label = group;
+      for (const v of items) {
+        const o = document.createElement("option");
+        o.value = v;
+        o.textContent = v + " — " + VERB_NAMES[v] + (ready.includes(v) ? "" : " · скоро");
+        o.disabled = !ready.includes(v);
+        og.appendChild(o);
+      }
+      sel.appendChild(og);
+    }
+    sel.addEventListener("change", () => setVerb(sel.value));
+  }
+  sel.value = saved.verb;
+}
+
+function renderBlocks() {
+  const el = document.getElementById("blocks");
+  el.innerHTML = "";
+  const items = [["all", "Все"], ...Object.keys(BLOCK_NAMES).map(k => [k, k])];
+  for (const [val, label] of items) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    if (val !== "all") b.title = BLOCK_NAMES[val];
+    if (saved.block === val) b.classList.add("active");
+    b.addEventListener("click", () => setBlock(val));
+    el.appendChild(b);
+  }
+}
+
+function makeTile(tile, label, onClick) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "tile";
+  b.textContent = label;
+  b.disabled = state.solved;
+  b.addEventListener("click", onClick);
+  return b;
+}
+
+function renderTiles() {
+  const answerEl = document.getElementById("answer");
+  const bankEl = document.getElementById("bank");
+  answerEl.innerHTML = "";
+  bankEl.innerHTML = "";
+  state.answer.forEach((t, i) => {
+    answerEl.appendChild(makeTile(t, i === 0 ? ucFirst(t.text) : t.text, () => moveToBank(t.id)));
+  });
+  if (!state.solved) {
+    const n = state.typed.length;
+    state.tiles.forEach(t => {
+      // Занятая плитка оставляет за собой пустое место, чтобы соседи не прыгали
+      if (t.used) {
+        const ghost = document.createElement("span");
+        ghost.className = "tile ghost";
+        ghost.textContent = t.text;
+        ghost.setAttribute("aria-hidden", "true");
+        bankEl.appendChild(ghost);
+        return;
+      }
+      const tile = makeTile(t, t.text, () => moveToAnswer(t.id));
+      if (n && norm(t.text).startsWith(norm(state.typed))) {
+        const cut = matchLen(t.text, state.typed);
+        tile.classList.add("match");
+        tile.textContent = "";
+        const hit = document.createElement("u");
+        hit.textContent = t.text.slice(0, cut);
+        tile.append(hit, t.text.slice(cut));
+      }
+      bankEl.appendChild(tile);
+    });
+  }
+  renderTyped();
+}
+
+function renderTyped() {
+  const el = document.getElementById("typed");
+  el.hidden = !state.typed;
+  if (!state.typed) return;
+  el.textContent = "Набрано: ";
+  const b = document.createElement("b");
+  b.textContent = state.typed;
+  el.appendChild(b);
+  const exact = matches(state.typed).some(t => t === state.typed.toLowerCase());
+  if (exact) el.append(" — пробел, чтобы подставить");
+}
+
+// В IT → RU новое слово показываем сразу: ответ всё равно русский.
+// В RU → IT — только после верного ответа, иначе это подсказка.
+function renderNewWords() {
+  const el = document.getElementById("newWords");
+  const words = newWords(state.phrase);
+  const show = words.length > 0 && (saved.dir === "it-ru" || state.solved);
+  el.hidden = !show;
+  el.innerHTML = "";
+  if (!show) return;
+  el.append(words.length > 1 ? "Новые слова: " : "Новое слово: ");
+  words.forEach((w, i) => {
+    if (i) el.append(", ");
+    const b = document.createElement("b");
+    b.textContent = w;
+    const g = document.createElement("span");
+    g.className = "gloss";
+    g.textContent = " — " + GLOSS.it[w];
+    el.append(b, g);
+  });
+}
+
+function renderFooter() {
+  const prog = progress();
+  const list = selection();
+  const solved = list.filter(p => (prog[p.id] || 0) >= 1).length;
+  const mastered = list.filter(p => (prog[p.id] || 0) >= MASTERED).length;
+  document.getElementById("stats").textContent =
+    `Решено: ${solved} / ${list.length} · усвоено: ${mastered}`;
+  document.getElementById("storageNote").hidden = storageOk;
+}
+
+function render() {
+  const p = state.phrase;
+  renderModes();
+  renderBlocks();
+  renderVerbs();
+
+  document.getElementById("blockTitle").textContent = verbMode()
+    ? `${saved.verb} · ${VERB_NAMES[saved.verb]}`
+    : `Блок ${p.block} · ${BLOCK_NAMES[p.block]}`;
+  document.getElementById("phraseType").textContent = verbMode()
+    ? `уровень ${p.level} · ${TYPE_NAMES[p.type]} · ${p.form}`
+    : TYPE_NAMES[p.type];
+  document.getElementById("dirToggle").textContent =
+    saved.dir === "it-ru" ? "IT → RU ⇄" : "RU → IT ⇄";
+
+  renderPrompt(p[sourceLang()], sourceLang());
+
+  const box = document.getElementById("answer");
+  box.classList.remove("wrong");
+  box.classList.toggle("right", state.solved);
+  document.getElementById("solution").textContent = state.solved ? state.matched : "";
+  // Показываем только выписанные вручную варианты: перестановки наречий
+  // засчитываются и так, перечислять их незачем.
+  const others = state.solved ? variants(p, targetLang()).filter(v => v !== state.matched) : [];
+  const altEl = document.getElementById("altSolutions");
+  altEl.hidden = others.length === 0;
+  altEl.textContent = others.length ? "Можно и так: " + others.join(" · ") : "";
+
+  document.getElementById("action").textContent = state.solved ? "Дальше" : "Проверить";
+
+  renderNewWords();
+  renderInfo();          // блок мог смениться вместе с фразой
+  renderTiles();
+  renderFooter();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Запуск
+// ═══════════════════════════════════════════════════════════════════════
+
+document.getElementById("dirToggle").addEventListener("click", toggleDir);
+document.getElementById("speak").addEventListener("click", () => speak(state.phrase.it));
+document.getElementById("copy").addEventListener("click", copyPhrase);
+document.getElementById("info").addEventListener("click", toggleInfo);
+document.getElementById("action").addEventListener("click", check);
+document.getElementById("reset").addEventListener("click", resetProgress);
+
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+  if (e.key === "Enter") {
+    e.preventDefault();
+    clearTyped();          // недобранное слово не должно мешать проверке
+    check();
+  } else if (e.key === "Backspace") {
+    e.preventDefault();
+    // Сначала стираем набранное по букве, потом убираем слова из ответа
+    if (state.typed) {
+      state.typed = state.typed.slice(0, -1);
+      renderTiles();
+    } else {
+      popLast();
+    }
+  } else if (e.key === "Escape") {
+    e.preventDefault();
+    hideTip();
+    clearTyped();
+  } else if (e.key === " " || e.code === "Space") {
+    e.preventDefault();
+    // Пробел подтверждает набранное слово, а без набора озвучивает фразу
+    if (!confirmTyped()) speak(state.phrase.it);
+  } else if (e.key.length === 1) {
+    if (typeChar(e.key)) e.preventDefault();
+  }
+});
+
+loadSaved();
+if ("speechSynthesis" in window) {
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
+nextPhrase(true);
+</script>
+</body>
+</html>
